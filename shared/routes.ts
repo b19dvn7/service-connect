@@ -55,8 +55,7 @@ export const api = {
       input: z.object({
         status: z.string().optional(),
         workDone: z.string().optional(),
-        partsUsed: z.array(z.object({ name: z.string(), quantity: z.number() })).optional(),
-        notes: z.string().optional(),
+        partsUsed: z.string().optional(),
       }),
       responses: {
         200: z.custom<typeof maintenanceRequests.$inferSelect>(),
