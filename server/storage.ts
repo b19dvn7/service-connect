@@ -6,7 +6,7 @@ export interface IStorage {
   createRequest(request: InsertMaintenanceRequest): Promise<typeof maintenanceRequests.$inferSelect>;
   getRequests(): Promise<(typeof maintenanceRequests.$inferSelect)[]>;
   getRequest(id: number): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
-  updateStatus(id: number, status: string): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
+  updateRequest(id: number, updates: any): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -21,9 +21,9 @@ export class DatabaseStorage implements IStorage {
     const [item] = await db.select().from(maintenanceRequests).where(eq(maintenanceRequests.id, id));
     return item;
   }
-  async updateStatus(id: number, status: string) {
+  async updateRequest(id: number, updates: any) {
     const [updated] = await db.update(maintenanceRequests)
-      .set({ status })
+      .set(updates)
       .where(eq(maintenanceRequests.id, id))
       .returning();
     return updated;
