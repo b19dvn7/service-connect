@@ -1,6 +1,28 @@
-import { pgTable, text, serial, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean, varchar, jsonb, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
+
+// Replit Auth required tables
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)]
+);
+
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const maintenanceRequests = pgTable("maintenance_requests", {
   id: serial("id").primaryKey(),
@@ -10,27 +32,26 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   description: text("description").notNull(),
   status: text("status").notNull().default("pending"),
   isUrgent: boolean("is_urgent").default(false),
-  workDone: text("work_done"),
-  partsUsed: jsonb("parts_used").$type<{ name: string; quantity: number }[]>().default([]),
-  notes: text("notes"),
+  workDone: text("work_done"), // Admin updates what work was performed
+  partsUsed: text("parts_used"), // Admin tracks parts/misc items
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const insertMaintenanceRequestSchema = createInsertSchema(maintenanceRequests).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
   status: true,
   workDone: true,
   partsUsed: true,
-  notes: true
 });
 
 export type MaintenanceRequest = typeof maintenanceRequests.$inferSelect;
 export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
 
-export type UpdateWorkOrderRequest = {
+export type UpdateRequestDetails = {
   status?: string;
   workDone?: string;
-  partsUsed?: { name: string; quantity: number }[];
-  notes?: string;
+  partsUsed?: string;
 };
