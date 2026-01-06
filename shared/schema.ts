@@ -1,18 +1,27 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+export const maintenanceRequests = pgTable("maintenance_requests", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  contactInfo: text("contact_info").notNull(),
+  vehicleInfo: text("vehicle_info").notNull(), // Year, Make, Model, VIN
+  description: text("description").notNull(),
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed
+  isUrgent: boolean("is_urgent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export const insertMaintenanceRequestSchema = createInsertSchema(maintenanceRequests).omit({
+  id: true,
+  createdAt: true,
+  status: true 
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type MaintenanceRequest = typeof maintenanceRequests.$inferSelect;
+export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
+
+export type UpdateStatusRequest = {
+  status: string;
+};

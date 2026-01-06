@@ -1,38 +1,33 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { maintenanceRequests, type InsertMaintenanceRequest } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createRequest(request: InsertMaintenanceRequest): Promise<typeof maintenanceRequests.$inferSelect>;
+  getRequests(): Promise<(typeof maintenanceRequests.$inferSelect)[]>;
+  getRequest(id: number): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
+  updateStatus(id: number, status: string): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class DatabaseStorage implements IStorage {
+  async createRequest(request: InsertMaintenanceRequest) {
+    const [newItem] = await db.insert(maintenanceRequests).values(request).returning();
+    return newItem;
   }
-
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getRequests() {
+    return await db.select().from(maintenanceRequests).orderBy(maintenanceRequests.createdAt);
   }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getRequest(id: number) {
+    const [item] = await db.select().from(maintenanceRequests).where(eq(maintenanceRequests.id, id));
+    return item;
   }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async updateStatus(id: number, status: string) {
+    const [updated] = await db.update(maintenanceRequests)
+      .set({ status })
+      .where(eq(maintenanceRequests.id, id))
+      .returning();
+    return updated;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
