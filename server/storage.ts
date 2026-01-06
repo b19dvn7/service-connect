@@ -1,12 +1,12 @@
-import { maintenanceRequests, type InsertMaintenanceRequest } from "@shared/schema";
+import { maintenanceRequests, type InsertMaintenanceRequest, type MaintenanceRequest } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
-  createRequest(request: InsertMaintenanceRequest): Promise<typeof maintenanceRequests.$inferSelect>;
-  getRequests(): Promise<(typeof maintenanceRequests.$inferSelect)[]>;
-  getRequest(id: number): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
-  updateRequest(id: number, updates: any): Promise<typeof maintenanceRequests.$inferSelect | undefined>;
+  createRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest>;
+  getRequests(): Promise<MaintenanceRequest[]>;
+  getRequest(id: number): Promise<MaintenanceRequest | undefined>;
+  updateRequest(id: number, updates: Partial<MaintenanceRequest>): Promise<MaintenanceRequest | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -21,9 +21,9 @@ export class DatabaseStorage implements IStorage {
     const [item] = await db.select().from(maintenanceRequests).where(eq(maintenanceRequests.id, id));
     return item;
   }
-  async updateRequest(id: number, updates: any) {
+  async updateRequest(id: number, updates: Partial<MaintenanceRequest>) {
     const [updated] = await db.update(maintenanceRequests)
-      .set(updates)
+      .set({ ...updates, updatedAt: new Date() })
       .where(eq(maintenanceRequests.id, id))
       .returning();
     return updated;
