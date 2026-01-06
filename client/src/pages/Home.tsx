@@ -49,7 +49,7 @@ export default function Home() {
               </Link>
               <Link href="/dashboard">
                 <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold uppercase tracking-wider border-white/20 hover:bg-white/5 rounded-sm">
-                  View Status
+                  Admin Dashboard
                 </Button>
               </Link>
             </div>

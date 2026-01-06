@@ -7,13 +7,18 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SubmitRequest from "@/pages/SubmitRequest";
 import Dashboard from "@/pages/Dashboard";
+import { useAuth } from "@/hooks/use-auth";
 
 function Router() {
+  const { isAuthenticated } = useAuth();
+  
   return (
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/submit" component={SubmitRequest} />
-      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard">
+        {isAuthenticated ? <Dashboard /> : <Dashboard />}
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
