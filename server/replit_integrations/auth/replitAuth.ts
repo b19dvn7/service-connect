@@ -17,10 +17,7 @@ import { authStorage } from "./storage";
  * - disable Replit OIDC routes to avoid 401/login loops
  * - allow the app to run end-to-end without auth
  */
-export const AUTH_DISABLED =
-  process.env.AUTH_DISABLED === "1" ||
-  process.env.AUTH_DISABLED === "true" ||
-  !process.env.REPL_ID;
+export const AUTH_DISABLED = true; // Forced bypass for development access
 
 const getOidcConfig = memoize(
   async () => {

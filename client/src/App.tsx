@@ -36,9 +36,9 @@ function Router() {
             <Button 
               size="lg" 
               className="h-14 px-8 text-lg font-bold uppercase tracking-wider"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = "/dashboard"}
             >
-              Login with Replit
+              Access Admin Dashboard (Bypass)
             </Button>
             <Button variant="ghost" onClick={() => window.location.href = "/"}>
               Back to Home
