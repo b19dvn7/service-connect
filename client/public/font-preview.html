@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JanGraff Preview</title>
+    <style>
+      @font-face {
+        font-family: "JanGraff";
+        src: url("/fonts/jan-graff.woff2?v=3") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #111;
+        color: #eee;
+        font-family: system-ui, sans-serif;
+      }
+      .clock {
+        font-family: "JanGraff", sans-serif;
+        font-size: 72px;
+        letter-spacing: 0.02em;
+        color: #f2f2f2;
+        -webkit-text-stroke: 3px #0b0b0b;
+        text-shadow: none;
+      }
+      .row {
+        margin: 20px 0;
+      }
+      .label {
+        font-size: 12px;
+        color: #aaa;
+        margin-bottom: 6px;
+      }
+      .small {
+        font-size: 48px;
+      }
+      .tight {
+        letter-spacing: -0.04em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="label">Sprite Preview (from glyph sheet)</div>
+    <div class="row" id="sprite"></div>
+    <script>
+      const text = "01 09 2026 0325";
+      const map = {
+        "0": [0, 0],
+        "1": [1, 0],
+        "2": [2, 0],
+        "3": [3, 0],
+        "4": [0, 1],
+        "5": [1, 1],
+        "6": [2, 1],
+        "7": [3, 1],
+        "8": [0, 2],
+        "9": [1, 2],
+        ":": [2, 2],
+        "-": [3, 2],
+      };
+      const root = document.getElementById("sprite");
+      root.style.display = "flex";
+      root.style.gap = "8px";
+      root.style.alignItems = "center";
+      const cell = 72;
+      const cols = 4;
+      const rows = 3;
+      for (const ch of text) {
+        if (ch === " ") {
+          const gap = document.createElement("span");
+          gap.style.width = String(cell * 0.35) + "px";
+          gap.style.height = String(cell) + "px";
+          root.appendChild(gap);
+          continue;
+        }
+        const pos = map[ch];
+        if (!pos) continue;
+        const span = document.createElement("span");
+        span.style.width = String(cell) + "px";
+        span.style.height = String(cell) + "px";
+        span.style.display = "inline-block";
+        span.style.backgroundImage = "url(/fonts/glyph-sprite.png?v=1)";
+        span.style.backgroundSize = `${cell * cols}px ${cell * rows}px`;
+        span.style.backgroundPosition = `${-pos[0] * cell}px ${-pos[1] * cell}px`;
+        span.style.backgroundRepeat = "no-repeat";
+        root.appendChild(span);
+      }
+    </script>
+  </body>
+</html>

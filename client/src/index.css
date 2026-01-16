@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bangers&family=Bungee&family=Fredoka:wght@600;700&family=Lilita+One&family=Luckiest+Guy&family=Rubik+Bubbles&family=Rubik+Puddles&family=Bebas+Neue&family=Baloo+2:wght@600;700;800&family=Teko:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Industrial Automotive Palette */
+  /* Base - Slate/Metal */
+  --background: 220 15% 10%; /* Dark matte slate */
+  --foreground: 210 20% 98%; /* White/Silver text */
+  
+  /* Primary - Safety Orange/Red */
+  --primary: 15 85% 55%; /* Industrial Orange */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary - Metallic Silver/Steel */
+  --secondary: 215 15% 25%; /* Steel Grey */
+  --secondary-foreground: 210 20% 98%;
+  
+  /* Accents */
+  --muted: 215 15% 18%;
+  --muted-foreground: 215 20% 75%;
+  
+  --accent: 15 85% 55%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  
+  --border: 215 15% 25%;
+  --input: 215 15% 20%;
+  --ring: 15 85% 55%;
+  
+  --radius: 0.25rem; /* Sharper corners for industrial feel */
+  
+  /* Typography */
+  --font-display: 'Teko', sans-serif;
+  --font-body: 'Rajdhani', sans-serif;
+}
+
+/* Light mode override (if needed, but defaulting to dark industrial feel) */
+.light {
+  --background: 210 20% 98%;
+  --foreground: 220 15% 10%;
+  --secondary: 210 10% 90%;
+  --secondary-foreground: 220 15% 10%;
+  --muted: 210 10% 92%;
+  --muted-foreground: 215 15% 40%;
+  --border: 214 20% 85%;
+  --input: 214 20% 90%;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-primary-foreground;
+    font-family: var(--font-body);
+    font-size: 1.125rem; /* Slightly larger for legibility */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-semibold tracking-wider uppercase;
+  }
+}
+
+/* Custom texture classes */
+.bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-metal-texture {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z' fill='%23ffffff' fill-opacity='0.02' fill-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.perforated-text {
+  color: transparent;
+  background-image: radial-gradient(circle, transparent 0 0.9px, #000 0.9px 2.2px);
+  background-size: 5px 5px;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.perforated-text--heavy {
+  font-family: "Lilita One", "Fredoka", var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  font-size: clamp(4rem, 8.2vw, 7.8rem);
+  line-height: 0.95;
+  display: inline-block;
+  transform: scaleX(1);
+  transform-origin: center;
+}
+
+.perforated-text--month {
+  font-family: "Bungee", "Bangers", var(--font-display);
+  letter-spacing: -0.06em;
+  display: inline-block;
+  transform: scaleX(0.95);
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.65);
+  text-shadow:
+    0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.perforated-text--rest {
+  font-family: "Lilita One", "Fredoka", var(--font-display);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-secondary hover:bg-primary/50 transition-colors rounded-none;
+}
