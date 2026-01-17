@@ -79,6 +79,14 @@ export async function registerRoutes(httpServer: Server, app: ExpressApp): Promi
     }
   });
 
+  app.delete("/api/requests/:id", isAuthenticated, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(404).json({ message: "Invalid ID" });
+    
+    await storage.deleteRequest(id);
+    res.status(204).end();
+  });
+
   // Seed data
   const existing = await storage.getRequests();
   if (existing.length === 0) {

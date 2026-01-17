@@ -32,7 +32,7 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   vehicleColor: text("vehicle_color"),
   mileage: integer("mileage"),
   description: text("description").notNull(),
-  status: text("status").notNull().default("pending"),
+  status: text("status").notNull().default("new"),
   isUrgent: boolean("is_urgent").default(false),
   workDone: text("work_done"), // Admin updates what work was performed
   partsUsed: text("parts_used"), // Admin tracks parts/misc items

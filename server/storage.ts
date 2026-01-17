@@ -7,6 +7,7 @@ export interface IStorage {
   getRequests(): Promise<MaintenanceRequest[]>;
   getRequest(id: number): Promise<MaintenanceRequest | undefined>;
   updateRequest(id: number, updates: Partial<MaintenanceRequest>): Promise<MaintenanceRequest | undefined>;
+  deleteRequest(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -40,6 +41,12 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updated;
   }
+  async deleteRequest(id: number) {
+    if (!db) {
+      throw new Error("Database not configured.");
+    }
+    await db.delete(maintenanceRequests).where(eq(maintenanceRequests.id, id));
+  }
 }
 
 class MemoryStorage implements IStorage {
@@ -56,7 +63,7 @@ class MemoryStorage implements IStorage {
       vehicleColor: request.vehicleColor ?? null,
       mileage: request.mileage ?? null,
       description: request.description,
-      status: "pending",
+      status: "new",
       isUrgent: request.isUrgent ?? false,
       workDone: null,
       partsUsed: null,
@@ -88,6 +95,10 @@ class MemoryStorage implements IStorage {
     const index = this.items.findIndex((entry) => entry.id === id);
     this.items[index] = updated;
     return updated;
+  }
+
+  async deleteRequest(id: number) {
+    this.items = this.items.filter((item) => item.id !== id);
   }
 }
 
