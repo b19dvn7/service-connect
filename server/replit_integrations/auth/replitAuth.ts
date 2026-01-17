@@ -111,13 +111,17 @@ export async function setupAuth(app: Express) {
           client: config,
           params: {
             redirect_uri: `https://${domain}/api/callback`,
-            scope: "openid email profile",
           },
         },
-        (tokens: any, verified: any) => {
-          const user: any = {};
-          updateUserSession(user, tokens);
-          upsertUser(tokens.claims()).then(() => verified(null, user)).catch(err => verified(err));
+        async (tokens: any, verified: any) => {
+          try {
+            const user: any = {};
+            updateUserSession(user, tokens);
+            await upsertUser(tokens.claims());
+            verified(null, user);
+          } catch (err) {
+            verified(err);
+          }
         }
       )
     );
@@ -132,6 +136,7 @@ export async function setupAuth(app: Express) {
     ensureStrategyWithConfig(req.hostname);
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
+      scope: ["openid", "email", "profile"],
     })(req, res, next);
   });
 
