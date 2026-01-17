@@ -188,7 +188,7 @@ export default function Dashboard() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 px-4">
           <h2 className="text-2xl font-bold uppercase font-display">Admin Access Required</h2>
           <Button size="lg" onClick={() => (window.location.href = "/api/login")}>
-            Login with Replit
+            Log In as Administrator
           </Button>
         </div>
       </div>

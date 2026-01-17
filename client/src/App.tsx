@@ -31,14 +31,14 @@ function Router() {
           <div className="flex flex-col items-center justify-center min-h-screen bg-background space-y-6 p-4">
             <div className="text-center space-y-2">
               <h2 className="text-3xl font-bold uppercase font-display tracking-tight">Admin Portal</h2>
-              <p className="text-muted-foreground">Please sign in to access the maintenance dashboard.</p>
+              <p className="text-muted-foreground">Access restricted to authorized personnel.</p>
             </div>
             <Button 
               size="lg" 
               className="h-14 px-8 text-lg font-bold uppercase tracking-wider"
               onClick={() => window.location.href = "/api/login"}
             >
-              Login with Replit
+              Log In as Administrator
             </Button>
             <Button variant="ghost" onClick={() => window.location.href = "/"}>
               Back to Home
