@@ -36,7 +36,6 @@ export function getSession() {
           store: new PgSession({
             conString: process.env.DATABASE_URL,
             createTableIfMissing: true,
-            errorLog: () => {}, // Suppress "already exists" errors
           }),
         }
       : {}),
