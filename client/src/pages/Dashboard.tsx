@@ -125,6 +125,249 @@ function getStatusIcon(status: string) {
   }
 }
 
+function MaintenanceRequestCard({ 
+  request, 
+  onUpdate 
+}: { 
+  request: MaintenanceRequest; 
+  onUpdate: (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => void;
+}) {
+  const form = useForm({
+    defaultValues: {
+      status: request.status,
+      workDone: request.workDone ?? "",
+      partsUsed: request.partsUsed ?? "",
+    },
+  });
+  const serviceSummary = parseServiceSummary(request.description);
+
+  return (
+    <Card
+      key={request.id}
+      className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
+    >
+      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-4">
+        <div className="space-y-1">
+          <div className="flex items-center flex-wrap gap-2">
+            <span className="text-xs font-mono text-muted-foreground">
+              WO #{request.id.toString().padStart(4, "0")}
+            </span>
+            <CardTitle className="text-xl uppercase font-display">
+              {request.customerName}
+            </CardTitle>
+            {request.isUrgent && (
+              <Badge variant="destructive" className="animate-pulse">
+                Urgent
+              </Badge>
+            )}
+            <Badge variant="outline" className="flex gap-1 items-center border-white/10">
+              {getStatusIcon(request.status)}
+              <span className="uppercase text-[10px] font-bold tracking-tighter">
+                {request.status.replace("_", " ")}
+              </span>
+            </Badge>
+          </div>
+
+          <div className="text-sm text-muted-foreground space-y-1">
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4 opacity-70" />
+              {request.vehicleInfo}
+            </div>
+            {request.mileage ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground/80 pl-6">
+                {request.mileage.toLocaleString()} mi
+              </div>
+            ) : null}
+          </div>
+
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div className="flex items-center gap-2">
+              <User className="w-3 h-3 opacity-70" />
+              {request.customerName}
+            </div>
+            <div className="flex items-center gap-2 pl-5">
+              <Phone className="w-3 h-3 opacity-70" />
+              {request.contactInfo}
+            </div>
+            <div className="flex items-center gap-2 pl-5">
+              <Calendar className="w-3 h-3 opacity-70" />
+              {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
+            </div>
+          </div>
+        </div>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10">
+              <PenBox className="w-4 h-4 mr-2" />
+              Manage
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent className="sm:max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle className="uppercase font-display">
+                Update Work Order #{request.id}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-white/10 bg-secondary/20 p-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
+                <ClipboardList className="w-3 h-3" />
+                Complaint / Reported Issue
+              </div>
+              <div className="mt-2 text-sm text-foreground/90 leading-relaxed">
+                {serviceSummary ? (
+                  <ServiceSummaryView summary={serviceSummary} />
+                ) : request.description ? (
+                  <span className="italic">“{request.description}”</span>
+                ) : (
+                  <span className="text-muted-foreground">No description provided.</span>
+                )}
+              </div>
+            </div>
+
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((v) =>
+                  onUpdate({
+                    id: request.id,
+                    status: v.status,
+                    workDone: v.workDone,
+                    partsUsed: v.partsUsed,
+                  })
+                )}
+                className="space-y-5 pt-2"
+              >
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase font-bold tracking-wider">
+                        Current Status
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-secondary/30">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in_progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="workDone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase font-bold tracking-wider">
+                        Work Performed
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Describe the service steps taken..."
+                          className="bg-secondary/30 min-h-[110px]"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="partsUsed"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs uppercase font-bold tracking-wider">
+                        Parts Used
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="List parts used (optional)..."
+                          className="bg-secondary/30 min-h-[90px]"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <Button
+                    type="submit"
+                    className="font-bold uppercase tracking-wide"
+                  >
+                    Save Update
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-4 rounded-lg border border-white/5">
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary">
+              <ClipboardList className="w-3 h-3" />
+              Problem Description
+            </h4>
+            {serviceSummary ? (
+              <ServiceSummaryView summary={serviceSummary} />
+            ) : (
+              <p className="text-sm text-muted-foreground leading-relaxed italic">
+                “{request.description}”
+              </p>
+            )}
+          </div>
+
+          {(request.workDone || request.partsUsed) ? (
+            <div className="space-y-4 md:border-l border-white/10 md:pl-6">
+              {request.workDone && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-green-500/80">
+                    Service Summary
+                  </h4>
+                  <p className="text-sm text-foreground/90">{request.workDone}</p>
+                </div>
+              )}
+
+              {request.partsUsed && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-orange-500/80">
+                    Parts Used
+                  </h4>
+                  <p className="text-sm text-foreground/90">{request.partsUsed}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2 md:border-l border-white/10 md:pl-6">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                <AlertTriangle className="w-3 h-3" />
+                No update yet
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Use “Manage” to add work performed and parts used.
+              </p>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
@@ -169,6 +412,19 @@ export default function Dashboard() {
     },
   });
 
+  const filteredRequests =
+    requests?.filter((r) => {
+      const matchesSearch =
+        r.customerName.toLowerCase().includes(search.toLowerCase()) ||
+        r.vehicleInfo.toLowerCase().includes(search.toLowerCase()) ||
+        (r.description || "").toLowerCase().includes(search.toLowerCase());
+
+      const matchesFilter =
+        filter === "all" ? true : r.status === filter;
+
+      return matchesSearch && matchesFilter;
+    }) ?? [];
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -194,19 +450,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  const filteredRequests =
-    requests?.filter((r) => {
-      const matchesSearch =
-        r.customerName.toLowerCase().includes(search.toLowerCase()) ||
-        r.vehicleInfo.toLowerCase().includes(search.toLowerCase()) ||
-        (r.description || "").toLowerCase().includes(search.toLowerCase());
-
-      const matchesFilter =
-        filter === "all" ? true : r.status === filter;
-
-      return matchesSearch && matchesFilter;
-    }) ?? [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,243 +500,13 @@ export default function Dashboard() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {filteredRequests.map((request) => {
-              const form = useForm({
-                defaultValues: {
-                  status: request.status,
-                  workDone: request.workDone ?? "",
-                  partsUsed: request.partsUsed ?? "",
-                },
-              });
-              const serviceSummary = parseServiceSummary(request.description);
-
-              return (
-                <Card
-                  key={request.id}
-                  className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
-                >
-                  <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center flex-wrap gap-2">
-                        <span className="text-xs font-mono text-muted-foreground">
-                          WO #{request.id.toString().padStart(4, "0")}
-                        </span>
-                        <CardTitle className="text-xl uppercase font-display">
-                          {request.customerName}
-                        </CardTitle>
-                        {request.isUrgent && (
-                          <Badge variant="destructive" className="animate-pulse">
-                            Urgent
-                          </Badge>
-                        )}
-                        <Badge variant="outline" className="flex gap-1 items-center border-white/10">
-                          {getStatusIcon(request.status)}
-                          <span className="uppercase text-[10px] font-bold tracking-tighter">
-                            {request.status.replace("_", " ")}
-                          </span>
-                        </Badge>
-                      </div>
-
-                      <div className="text-sm text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Truck className="w-4 h-4 opacity-70" />
-                          {request.vehicleInfo}
-                        </div>
-                        {request.mileage ? (
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground/80 pl-6">
-                            {request.mileage.toLocaleString()} mi
-                          </div>
-                        ) : null}
-                      </div>
-
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <div className="flex items-center gap-2">
-                          <User className="w-3 h-3 opacity-70" />
-                          {request.customerName}
-                        </div>
-                        <div className="flex items-center gap-2 pl-5">
-                          <Phone className="w-3 h-3 opacity-70" />
-                          {request.contactInfo}
-                        </div>
-                        <div className="flex items-center gap-2 pl-5">
-                          <Calendar className="w-3 h-3 opacity-70" />
-                          {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10">
-                          <PenBox className="w-4 h-4 mr-2" />
-                          Manage
-                        </Button>
-                      </DialogTrigger>
-
-                      <DialogContent className="sm:max-w-[520px]">
-                        <DialogHeader>
-                          <DialogTitle className="uppercase font-display">
-                            Update Work Order #{request.id}
-                          </DialogTitle>
-                        </DialogHeader>
-
-                        <div className="rounded-lg border border-white/10 bg-secondary/20 p-3">
-                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
-                            <ClipboardList className="w-3 h-3" />
-                            Complaint / Reported Issue
-                          </div>
-                          <div className="mt-2 text-sm text-foreground/90 leading-relaxed">
-                            {serviceSummary ? (
-                              <ServiceSummaryView summary={serviceSummary} />
-                            ) : request.description ? (
-                              <span className="italic">“{request.description}”</span>
-                            ) : (
-                              <span className="text-muted-foreground">No description provided.</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <Form {...form}>
-                          <form
-                            onSubmit={form.handleSubmit((v) =>
-                              updateMutation.mutate({
-                                id: request.id,
-                                status: v.status,
-                                workDone: v.workDone,
-                                partsUsed: v.partsUsed,
-                              })
-                            )}
-                            className="space-y-5 pt-2"
-                          >
-                            <FormField
-                              control={form.control}
-                              name="status"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs uppercase font-bold tracking-wider">
-                                    Current Status
-                                  </FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                      <SelectTrigger className="bg-secondary/30">
-                                        <SelectValue placeholder="Select status" />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="pending">Pending</SelectItem>
-                                      <SelectItem value="in_progress">In Progress</SelectItem>
-                                      <SelectItem value="completed">Completed</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="workDone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs uppercase font-bold tracking-wider">
-                                    Work Performed
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      {...field}
-                                      placeholder="Describe the service steps taken..."
-                                      className="bg-secondary/30 min-h-[110px]"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="partsUsed"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs uppercase font-bold tracking-wider">
-                                    Parts Used
-                                  </FormLabel>
-                                  <FormControl>
-                                    <Textarea
-                                      {...field}
-                                      placeholder="List parts used (optional)..."
-                                      className="bg-secondary/30 min-h-[90px]"
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-
-                            <div className="flex items-center justify-end gap-2 pt-2">
-                              <Button
-                                type="submit"
-                                disabled={updateMutation.isPending}
-                                className="font-bold uppercase tracking-wide"
-                              >
-                                Save Update
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-4 rounded-lg border border-white/5">
-                      <div className="space-y-2">
-                        <h4 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary">
-                          <ClipboardList className="w-3 h-3" />
-                          Problem Description
-                        </h4>
-                        {serviceSummary ? (
-                          <ServiceSummaryView summary={serviceSummary} />
-                        ) : (
-                          <p className="text-sm text-muted-foreground leading-relaxed italic">
-                            “{request.description}”
-                          </p>
-                        )}
-                      </div>
-
-                      {(request.workDone || request.partsUsed) ? (
-                        <div className="space-y-4 md:border-l border-white/10 md:pl-6">
-                          {request.workDone && (
-                            <div className="space-y-1">
-                              <h4 className="text-xs font-bold uppercase tracking-widest text-green-500/80">
-                                Service Summary
-                              </h4>
-                              <p className="text-sm text-foreground/90">{request.workDone}</p>
-                            </div>
-                          )}
-
-                          {request.partsUsed && (
-                            <div className="space-y-1">
-                              <h4 className="text-xs font-bold uppercase tracking-widest text-orange-500/80">
-                                Parts Used
-                              </h4>
-                              <p className="text-sm text-foreground/90">{request.partsUsed}</p>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="space-y-2 md:border-l border-white/10 md:pl-6">
-                          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                            <AlertTriangle className="w-3 h-3" />
-                            No update yet
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Use “Manage” to add work performed and parts used.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {filteredRequests.map((request) => (
+              <MaintenanceRequestCard 
+                key={request.id} 
+                request={request} 
+                onUpdate={(payload) => updateMutation.mutate(payload)} 
+              />
+            ))}
           </div>
         )}
       </div>
