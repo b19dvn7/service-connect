@@ -181,6 +181,8 @@ export default function Dashboard() {
     );
   }
 
+  // Bypass authentication check in the component rendering
+  /*
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
@@ -194,6 +196,7 @@ export default function Dashboard() {
       </div>
     );
   }
+  */
 
   const filteredRequests =
     requests?.filter((r) => {

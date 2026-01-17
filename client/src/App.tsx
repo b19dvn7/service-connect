@@ -26,26 +26,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/submit" component={SubmitRequest} />
-      <Route path="/dashboard">
-        {isAuthenticated ? <Dashboard /> : (
-          <div className="flex flex-col items-center justify-center min-h-screen bg-background space-y-6 p-4">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold uppercase font-display tracking-tight">Admin Portal</h2>
-              <p className="text-muted-foreground">Please sign in to access the maintenance dashboard.</p>
-            </div>
-            <Button 
-              size="lg" 
-              className="h-14 px-8 text-lg font-bold uppercase tracking-wider"
-              onClick={() => window.location.href = "/dashboard"}
-            >
-              Access Admin Dashboard (Bypass)
-            </Button>
-            <Button variant="ghost" onClick={() => window.location.href = "/"}>
-              Back to Home
-            </Button>
-          </div>
-        )}
-      </Route>
+      <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );
