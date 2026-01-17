@@ -130,8 +130,9 @@ function MaintenanceRequestCard({
   onUpdate 
 }: { 
   request: MaintenanceRequest; 
-  onUpdate: (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => void;
+  onUpdate: (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => Promise<any>;
 }) {
+  const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: {
       status: request.status,
@@ -140,6 +141,20 @@ function MaintenanceRequestCard({
     },
   });
   const serviceSummary = parseServiceSummary(request.description);
+
+  const handleSubmit = async (v: any) => {
+    try {
+      await onUpdate({
+        id: request.id,
+        status: v.status,
+        workDone: v.workDone,
+        partsUsed: v.partsUsed,
+      });
+      setOpen(false);
+    } catch (err) {
+      // Error handled by mutation onError
+    }
+  };
 
   return (
     <Card
@@ -196,7 +211,7 @@ function MaintenanceRequestCard({
           </div>
         </div>
 
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10">
               <PenBox className="w-4 h-4 mr-2" />
@@ -229,14 +244,7 @@ function MaintenanceRequestCard({
 
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((v) =>
-                  onUpdate({
-                    id: request.id,
-                    status: v.status,
-                    workDone: v.workDone,
-                    partsUsed: v.partsUsed,
-                  })
-                )}
+                onSubmit={form.handleSubmit(handleSubmit)}
                 className="space-y-5 pt-2"
               >
                 <FormField
@@ -451,11 +459,14 @@ export default function Dashboard() {
     );
   }
 
+  const activeRequests = filteredRequests.filter(r => r.status !== "completed");
+  const completedRequests = filteredRequests.filter(r => r.status === "completed");
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+      <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold uppercase font-display tracking-tight">Dashboard</h1>
@@ -499,14 +510,50 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredRequests.map((request) => (
-              <MaintenanceRequestCard 
-                key={request.id} 
-                request={request} 
-                onUpdate={(payload) => updateMutation.mutate(payload)} 
-              />
-            ))}
+          <div className="space-y-12">
+            {/* Active Requests Section */}
+            {activeRequests.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-white/5" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-primary whitespace-nowrap">
+                    Active Work Orders ({activeRequests.length})
+                  </h2>
+                  <div className="h-px flex-1 bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {activeRequests.map((request) => (
+                    <MaintenanceRequestCard 
+                      key={request.id} 
+                      request={request} 
+                      onUpdate={(payload) => updateMutation.mutateAsync(payload)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Completed Requests Section */}
+            {completedRequests.length > 0 && (
+              <div className="space-y-4 opacity-70 hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-white/5" />
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                    Completed Archive ({completedRequests.length})
+                  </h2>
+                  <div className="h-px flex-1 bg-white/5" />
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {completedRequests.map((request) => (
+                    <MaintenanceRequestCard 
+                      key={request.id} 
+                      request={request} 
+                      onUpdate={(payload) => updateMutation.mutateAsync(payload)} 
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
