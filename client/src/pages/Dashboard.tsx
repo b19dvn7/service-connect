@@ -181,22 +181,19 @@ export default function Dashboard() {
     );
   }
 
-  // Bypass authentication check in the component rendering
-  /*
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 px-4">
           <h2 className="text-2xl font-bold uppercase font-display">Admin Access Required</h2>
-          <Button size="lg" onClick={() => (window.location.href = "/dashboard")}>
-            Access Admin Dashboard (Bypass)
+          <Button size="lg" onClick={() => (window.location.href = "/api/login")}>
+            Login with Replit
           </Button>
         </div>
       </div>
     );
   }
-  */
 
   const filteredRequests =
     requests?.filter((r) => {

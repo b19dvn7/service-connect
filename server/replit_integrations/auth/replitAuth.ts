@@ -17,7 +17,10 @@ import { authStorage } from "./storage";
  * - disable Replit OIDC routes to avoid 401/login loops
  * - allow the app to run end-to-end without auth
  */
-export const AUTH_DISABLED = true; // Forced bypass for development access
+export const AUTH_DISABLED =
+  process.env.AUTH_DISABLED === "1" ||
+  process.env.AUTH_DISABLED === "true" ||
+  !process.env.REPL_ID;
 
 const getOidcConfig = memoize(
   async () => {
@@ -143,6 +146,17 @@ export async function setupAuth(app: Express) {
   });
 }
 
-export const isAuthenticated: RequestHandler = async (_req, _res, next) => {
-  return next(); // Forced bypass for development access
+export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (AUTH_DISABLED) return next();
+
+  const user = req.user as any;
+  if (!req.isAuthenticated() || !user?.expires_at) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (now <= user.expires_at) return next();
+
+  // Token refresh can be implemented here if needed.
+  return res.status(401).json({ message: "Unauthorized" });
 };
