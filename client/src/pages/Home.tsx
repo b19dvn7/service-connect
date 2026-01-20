@@ -51,7 +51,7 @@ export default function Home() {
             <div className="w-full flex justify-center">
               <img 
                 src={detroitEmblem} 
-                alt="Detroit Diesel Emblem" 
+                alt="Diesel Emblem" 
                 className="h-64 md:h-96 w-auto object-contain brightness-200 transition-all hover:scale-105 duration-500" 
               />
             </div>

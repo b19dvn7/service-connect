@@ -24,7 +24,7 @@ export function Navbar() {
             <RefreshCw className="h-6 w-6" />
           </div>
           <span className="font-display text-2xl font-bold tracking-tight text-foreground uppercase">
-            Detroit Diesel <span className="text-primary">Connect</span>
+            Diesel <span className="text-primary">Connect</span>
           </span>
         </Link>
 
