@@ -10,8 +10,7 @@ export const sessions = pgTable(
     sid: varchar("sid").primaryKey(),
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)]
+  }
 );
 
 export const users = pgTable("users", {

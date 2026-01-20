@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -140,7 +141,7 @@ function MaintenanceRequestCard({
 }) {
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [checklist, setChecklist] = useState<any[]>(request.checklist || []);
+  const [checklist, setChecklist] = useState<any[]>(Array.isArray(request.checklist) ? request.checklist : []);
   const form = useForm({
     defaultValues: {
       status: request.status,
@@ -188,7 +189,8 @@ function MaintenanceRequestCard({
   };
 
   useEffect(() => {
-    if (!request.checklist?.length && serviceSummary) {
+    const existingChecklist = Array.isArray(request.checklist) ? request.checklist : [];
+    if (existingChecklist.length === 0 && serviceSummary) {
       const initial: any[] = [];
       Object.entries(serviceSummary.groups).forEach(([group, data]: any) => {
         data.items.forEach((item: string) => {
