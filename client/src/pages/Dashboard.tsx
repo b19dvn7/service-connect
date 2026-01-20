@@ -150,7 +150,12 @@ function MaintenanceRequestCard({
   });
   const serviceSummary = parseServiceSummary(request.description);
 
-  const handleSubmit = async (v: any, shouldClose = true) => {
+  const [autoClose, setAutoClose] = useState(() => {
+    const saved = localStorage.getItem("admin_auto_close_dialog");
+    return saved !== null ? JSON.parse(saved) : false;
+  });
+
+  const handleSubmit = async (v: any, forceClose = false) => {
     try {
       await onUpdate({
         id: request.id,
@@ -159,10 +164,15 @@ function MaintenanceRequestCard({
         partsUsed: v.partsUsed,
         checklist,
       });
-      if (shouldClose) setOpen(false);
+      if (forceClose || autoClose) setOpen(false);
     } catch (err) {
       // Error handled by mutation onError
     }
+  };
+
+  const handleAutoCloseToggle = (checked: boolean) => {
+    setAutoClose(checked);
+    localStorage.setItem("admin_auto_close_dialog", JSON.stringify(checked));
   };
 
   const toggleChecklistItem = (index: number) => {
@@ -328,23 +338,25 @@ function MaintenanceRequestCard({
 
                     <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
                       <div className="flex items-center gap-2 mr-auto">
-                        <Checkbox id="auto-close" defaultChecked={false} className="h-4 w-4" />
-                        <label htmlFor="auto-close" className="text-xs text-muted-foreground cursor-pointer">Close after saving</label>
+                        <Checkbox 
+                          id={`auto-close-${request.id}`} 
+                          checked={autoClose} 
+                          onCheckedChange={handleAutoCloseToggle}
+                          className="h-4 w-4" 
+                        />
+                        <label htmlFor={`auto-close-${request.id}`} className="text-xs text-muted-foreground cursor-pointer">Close after saving</label>
                       </div>
                       <Button 
                         type="button" 
                         variant="secondary"
-                        onClick={() => {
-                          const autoClose = (document.getElementById('auto-close') as HTMLInputElement)?.checked;
-                          handleSubmit(form.getValues(), autoClose);
-                        }}
+                        onClick={() => handleSubmit(form.getValues())}
                         className="font-bold uppercase tracking-wide"
                       >
                         Save Update
                       </Button>
                       <Button 
                         type="button"
-                        onClick={() => handleSubmit({ ...form.getValues(), status: 'completed' })}
+                        onClick={() => handleSubmit({ ...form.getValues(), status: 'completed' }, true)}
                         className="font-bold uppercase tracking-wide bg-green-600 hover:bg-green-700 text-white"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" />
