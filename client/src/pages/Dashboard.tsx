@@ -160,10 +160,10 @@ function MaintenanceRequestCard({
     try {
       await onUpdate({
         id: request.id,
-        status: v.status,
+        status: forceClose ? 'completed' : v.status,
         workDone: v.workDone,
         partsUsed: v.partsUsed,
-        checklist,
+        checklist, // This will now contain the latest toggle states
       });
       if (forceClose || autoClose) setOpen(false);
     } catch (err) {
@@ -199,7 +199,7 @@ function MaintenanceRequestCard({
       });
       if (initial.length) setChecklist(initial);
     }
-  }, [request.checklist, serviceSummary]);
+  }, [serviceSummary]); // Removed request.checklist to prevent loops
 
   return (
     <Card className="bg-card/80 backdrop-blur border-white/5 overflow-visible">
@@ -351,14 +351,20 @@ function MaintenanceRequestCard({
                       <Button 
                         type="button" 
                         variant="secondary"
-                        onClick={() => handleSubmit(form.getValues())}
+                        onClick={() => {
+                          const values = form.getValues();
+                          handleSubmit(values);
+                        }}
                         className="font-bold uppercase tracking-wide"
                       >
                         Save Update
                       </Button>
                       <Button 
                         type="button"
-                        onClick={() => handleSubmit({ ...form.getValues(), status: 'completed' }, true)}
+                        onClick={() => {
+                          const values = form.getValues();
+                          handleSubmit(values, true);
+                        }}
                         className="font-bold uppercase tracking-wide bg-green-600 hover:bg-green-700 text-white"
                       >
                         <CheckCircle2 className="w-4 h-4 mr-2" />
