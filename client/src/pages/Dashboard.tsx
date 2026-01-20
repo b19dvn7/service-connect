@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { MaintenanceRequest } from "@shared/schema";
-import { useState } from "react";
+import { MaintenanceRequest } from "@shared/schema";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Navbar";
 import {
   ClipboardList,
@@ -134,11 +135,12 @@ function MaintenanceRequestCard({
   onDelete
 }: { 
   request: MaintenanceRequest; 
-  onUpdate: (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => Promise<any>;
+  onUpdate: (payload: { id: number; status: string; workDone?: string; partsUsed?: string; checklist?: any[] }) => Promise<any>;
   onDelete: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [checklist, setChecklist] = useState<any[]>(request.checklist || []);
   const form = useForm({
     defaultValues: {
       status: request.status,
@@ -148,19 +150,44 @@ function MaintenanceRequestCard({
   });
   const serviceSummary = parseServiceSummary(request.description);
 
-  const handleSubmit = async (v: any) => {
+  const handleSubmit = async (v: any, shouldClose = true) => {
     try {
       await onUpdate({
         id: request.id,
         status: v.status,
         workDone: v.workDone,
         partsUsed: v.partsUsed,
+        checklist,
       });
-      setOpen(false);
+      if (shouldClose) setOpen(false);
     } catch (err) {
       // Error handled by mutation onError
     }
   };
+
+  const toggleChecklistItem = (index: number) => {
+    const next = [...checklist];
+    next[index].completed = !next[index].completed;
+    setChecklist(next);
+  };
+
+  const updateChecklistComment = (index: number, comment: string) => {
+    const next = [...checklist];
+    next[index].comment = comment;
+    setChecklist(next);
+  };
+
+  useEffect(() => {
+    if (!request.checklist?.length && serviceSummary) {
+      const initial: any[] = [];
+      Object.entries(serviceSummary.groups).forEach(([group, data]: any) => {
+        data.items.forEach((item: string) => {
+          initial.push({ group, item, completed: false, comment: "" });
+        });
+      });
+      if (initial.length) setChecklist(initial);
+    }
+  }, [request.checklist, serviceSummary]);
 
   return (
     <Card className="bg-card/80 backdrop-blur border-white/5 overflow-visible">
@@ -202,83 +229,131 @@ function MaintenanceRequestCard({
                 Manage
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[520px]">
+            <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="uppercase font-display">Update Work Order #{request.id}</DialogTitle>
               </DialogHeader>
 
-              <div className="rounded-lg border border-white/10 bg-secondary/20 p-3">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
-                  <ClipboardList className="w-3 h-3" />
-                  Complaint / Reported Issue
-                </div>
-                <div className="mt-2 text-sm text-foreground/90 leading-relaxed">
-                  {serviceSummary ? (
-                    <ServiceSummaryView summary={serviceSummary} />
-                  ) : request.description ? (
-                    <span className="italic">“{request.description}”</span>
-                  ) : (
-                    <span className="text-muted-foreground">No description provided.</span>
-                  )}
-                </div>
-              </div>
-
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5 pt-2">
-                  <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs uppercase font-bold tracking-wider">Current Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-secondary/30">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="new">New</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="in_progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="workDone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs uppercase font-bold tracking-wider">Work Performed</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="Describe the service steps taken..." className="bg-secondary/30 min-h-[110px]" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="partsUsed"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs uppercase font-bold tracking-wider">Parts Used</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} placeholder="List parts used (optional)..." className="bg-secondary/30 min-h-[90px]" />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex items-center justify-end gap-2 pt-2">
-                    <Button type="submit" className="font-bold uppercase tracking-wide">Save Update</Button>
+              <div className="space-y-6">
+                {checklist.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
+                      <ClipboardList className="w-3 h-3" />
+                      Service Checklist
+                    </div>
+                    <div className="grid gap-3">
+                      {checklist.map((item, idx) => (
+                        <div key={idx} className="flex flex-col gap-2 p-3 rounded-lg border border-white/5 bg-secondary/10">
+                          <div className="flex items-center gap-3">
+                            <Checkbox 
+                              checked={item.completed} 
+                              onCheckedChange={() => toggleChecklistItem(idx)}
+                              id={`item-${idx}`}
+                            />
+                            <div className="flex-1">
+                              <label 
+                                htmlFor={`item-${idx}`}
+                                className={cn(
+                                  "text-sm font-medium leading-none cursor-pointer",
+                                  item.completed && "text-muted-foreground line-through"
+                                )}
+                              >
+                                <span className="text-[10px] opacity-50 mr-2 uppercase">{item.group}:</span>
+                                {item.item}
+                              </label>
+                            </div>
+                          </div>
+                          <Input 
+                            placeholder="Add comment or note..."
+                            value={item.comment}
+                            onChange={(e) => updateChecklistComment(idx, e.target.value)}
+                            className="h-8 text-xs bg-transparent border-white/5 focus:border-primary/30"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </form>
-              </Form>
+                )}
+
+                <Form {...form}>
+                  <form className="space-y-5">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs uppercase font-bold tracking-wider">Current Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-secondary/30">
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="new">New</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="in_progress">In Progress</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="workDone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs uppercase font-bold tracking-wider">Work Performed</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Describe the service steps taken..." className="bg-secondary/30 min-h-[110px]" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="partsUsed"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs uppercase font-bold tracking-wider">Parts Used</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="List parts used (optional)..." className="bg-secondary/30 min-h-[90px]" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-2 mr-auto">
+                        <Checkbox id="auto-close" defaultChecked={false} className="h-4 w-4" />
+                        <label htmlFor="auto-close" className="text-xs text-muted-foreground cursor-pointer">Close after saving</label>
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="secondary"
+                        onClick={() => {
+                          const autoClose = (document.getElementById('auto-close') as HTMLInputElement)?.checked;
+                          handleSubmit(form.getValues(), autoClose);
+                        }}
+                        className="font-bold uppercase tracking-wide"
+                      >
+                        Save Update
+                      </Button>
+                      <Button 
+                        type="button"
+                        onClick={() => handleSubmit({ ...form.getValues(), status: 'completed' })}
+                        className="font-bold uppercase tracking-wide bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Complete Order
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
             </DialogContent>
           </Dialog>
 
@@ -358,7 +433,7 @@ export default function Dashboard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => {
+    mutationFn: async (payload: { id: number; status: string; workDone?: string; partsUsed?: string; checklist?: any[] }) => {
       const res = await fetch(api.requests.update.path.replace(":id", payload.id.toString()), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

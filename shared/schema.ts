@@ -36,6 +36,7 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   isUrgent: boolean("is_urgent").default(false),
   workDone: text("work_done"), // Admin updates what work was performed
   partsUsed: text("parts_used"), // Admin tracks parts/misc items
+  checklist: jsonb("checklist").default([]), // Admin tracking of specific tasks
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
