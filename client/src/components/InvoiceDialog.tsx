@@ -15,6 +15,19 @@ interface InvoiceDialogProps {
   request: MaintenanceRequest;
 }
 
+const SERVICE_PREFIX = "SERVICE_JSON:";
+
+function getRequestNotes(request: MaintenanceRequest): string {
+  const description = request.description ?? "";
+  if (!description.startsWith(SERVICE_PREFIX)) return "";
+  try {
+    const payload = JSON.parse(description.slice(SERVICE_PREFIX.length));
+    return payload.internalNotes || payload.additionalNotes || "";
+  } catch {
+    return "";
+  }
+}
+
 export function InvoiceDialog({ request }: InvoiceDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -71,10 +84,12 @@ export function InvoiceDialog({ request }: InvoiceDialogProps) {
       });
     } else {
       // Pre-fill from work order
+      const defaultNotes = getRequestNotes(request);
       setFormData(prev => ({
         ...prev,
         laborDescription: request.workDone || "",
         partsDetails: request.partsUsed || "",
+        notes: defaultNotes || prev.notes,
       }));
     }
   }, [invoice, request]);

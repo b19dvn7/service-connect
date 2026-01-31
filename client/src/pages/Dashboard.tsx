@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,6 @@ import {
   ClipboardList,
   PenBox,
   Truck,
-  Phone,
   Calendar,
   Clock,
   CheckCircle2,
@@ -45,6 +45,12 @@ function getStatusIcon(status: string) {
 const SERVICE_PREFIX = "SERVICE_JSON:";
 const SERVICE_GROUP_ORDER = ["Filters", "Fluids", "Gaskets / Seals", "Major Components"] as const;
 const NEW_REQUEST_WINDOW_HOURS = 24;
+const STATUS_LABELS: Record<string, string> = {
+  pending: "Pending",
+  in_progress: "Open",
+  completed: "Complete",
+  all: "All",
+};
 
 type ServiceGroup = {
   items?: string[];
@@ -56,6 +62,8 @@ type ServiceGroup = {
 type ServicePayload = {
   groups?: Record<string, ServiceGroup>;
   additionalNotes?: string;
+  internalNotes?: string;
+  issueText?: string;
   attachments?: { name: string; url: string }[];
 };
 
@@ -87,11 +95,43 @@ function formatVehicleLine(request: MaintenanceRequest): string {
   return base;
 }
 
+function getCustomerNote(payload: ServicePayload | null, fallback?: string | null): string {
+  if (!payload) return fallback ?? "";
+  return payload.issueText ?? payload.additionalNotes ?? fallback ?? "";
+}
+
 function isNewRequest(request: MaintenanceRequest): boolean {
   if (!request.createdAt) return false;
   const created = new Date(request.createdAt).getTime();
   const windowMs = NEW_REQUEST_WINDOW_HOURS * 60 * 60 * 1000;
   return Date.now() - created < windowMs && request.status === "pending";
+}
+
+function ExpandableText({
+  text,
+  placeholder,
+}: {
+  text?: string | null;
+  placeholder: string;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const display = text?.trim();
+
+  if (!display) {
+    return <p className="text-xs text-muted-foreground/70">{placeholder}</p>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setExpanded((prev) => !prev)}
+      className={`text-left text-sm text-muted-foreground/90 ${
+        expanded ? "" : "line-clamp-1"
+      }`}
+    >
+      {display}
+    </button>
+  );
 }
 
 function EditableNote({
@@ -146,7 +186,7 @@ function EditableNote({
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className={`text-left text-xs transition-colors ${
+      className={`text-left text-xs transition-colors line-clamp-1 ${
         value?.trim()
           ? "text-foreground/70 hover:text-foreground"
           : "text-muted-foreground/70 hover:text-foreground"
@@ -162,26 +202,45 @@ function ServiceDetails({
   payload,
   onSaveGroupNotes,
   onToggleGroupDone,
-  onSaveAdditionalNotes,
+  onSaveInternalNotes,
 }: {
   request: MaintenanceRequest;
   payload: ServicePayload | null;
   onSaveGroupNotes: (groupKey: string, note: string) => void;
   onToggleGroupDone: (groupKey: string, next: boolean) => void;
-  onSaveAdditionalNotes: (note: string) => void;
+  onSaveInternalNotes: (note: string) => void;
 }) {
+  const groups = payload?.groups ?? {};
+  const customerNote = getCustomerNote(payload, request.description);
+
   if (!payload) {
     return (
-      <p className="text-sm text-muted-foreground leading-relaxed italic">
-        {request.description || "No description provided."}
-      </p>
+      <div className="space-y-4">
+        <ExpandableText
+          text={customerNote}
+          placeholder="No customer note provided."
+        />
+        <EditableNote
+          value={undefined}
+          placeholder="Add internal notes"
+          onSave={onSaveInternalNotes}
+        />
+      </div>
     );
   }
 
-  const groups = payload.groups ?? {};
-
   return (
     <div className="space-y-4">
+      <div className="space-y-2">
+        <div className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground">
+          Customer Note
+        </div>
+        <ExpandableText
+          text={customerNote}
+          placeholder="No customer note provided."
+        />
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         {SERVICE_GROUP_ORDER.map((label) => {
           const group = groups[label] ?? {};
@@ -233,12 +292,12 @@ function ServiceDetails({
 
       <div className="border-t border-white/10 pt-3 space-y-2">
         <div className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground">
-          Additional Notes
+          Internal Notes
         </div>
         <EditableNote
-          value={payload.additionalNotes}
-          placeholder="Add additional notes"
-          onSave={onSaveAdditionalNotes}
+          value={payload.internalNotes}
+          placeholder="Add internal notes"
+          onSave={onSaveInternalNotes}
         />
       </div>
     </div>
@@ -292,11 +351,20 @@ function RequestCard({
     onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
   };
 
-  const handleSaveAdditionalNotes = (note: string) => {
-    if (!servicePayload) return;
+  const handleSaveInternalNotes = (note: string) => {
+    if (!servicePayload) {
+      const nextPayload: ServicePayload = {
+        issueText: request.description ?? "",
+        internalNotes: note,
+        groups: {},
+      };
+      onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
+      return;
+    }
+
     const nextPayload: ServicePayload = {
       ...servicePayload,
-      additionalNotes: note,
+      internalNotes: note,
     };
     onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
   };
@@ -319,7 +387,7 @@ function RequestCard({
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto">
+    <div className="w-full max-w-4xl">
       <Card
         key={request.id}
         className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
@@ -327,28 +395,53 @@ function RequestCard({
         <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
+              {showNew && (
+                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
+                  NEW
+                </span>
+              )}
               <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 WO #{request.id.toString().padStart(4, "0")}
               </span>
-              <CardTitle className="text-xl uppercase font-display">
-                {request.customerName}
-              </CardTitle>
-              {showNew && (
-                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
-                  New
-                </span>
-              )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <CardTitle className="text-xl uppercase font-display cursor-help">
+                      {request.customerName}
+                    </CardTitle>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs">
+                    {request.contactInfo}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {request.isUrgent && (
                 <Badge variant="destructive" className="animate-pulse">
                   Urgent
                 </Badge>
               )}
-              <Badge variant="outline" className="flex gap-1 items-center border-white/10">
-                {getStatusIcon(request.status)}
-                <span className="uppercase text-[10px] font-bold tracking-tighter">
-                  {request.status.replace("_", " ")}
-                </span>
-              </Badge>
+              <Select
+                value={request.status}
+                onValueChange={(value) => onUpdate({ id: request.id, status: value })}
+              >
+                <SelectTrigger className="h-7 w-[110px] px-2 text-[10px] uppercase tracking-widest border-white/15 bg-background/40">
+                  <SelectValue placeholder="Status">
+                    <span className="flex items-center gap-1">
+                      {getStatusIcon(request.status)}
+                      {STATUS_LABELS[request.status] ?? request.status}
+                    </span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {(["pending", "in_progress", "completed"] as const)
+                    .filter((status) => status !== request.status)
+                    .map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {STATUS_LABELS[status] ?? status}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {vehicleLine ? (
@@ -358,18 +451,15 @@ function RequestCard({
               </p>
             ) : null}
 
-            <p className="text-xs text-muted-foreground flex items-center gap-2">
-              <Phone className="w-3 h-3 opacity-70" />
-              {request.contactInfo}
-              <span className="opacity-40">•</span>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
               <Calendar className="w-3 h-3 opacity-70" />
               {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
-            </p>
+            </div>
           </div>
 
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-8 px-3 text-xs">
                 <PenBox className="w-4 h-4 mr-2" />
                 Manage
               </Button>
@@ -494,16 +584,16 @@ function RequestCard({
             }`}
           >
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground">
                 <ClipboardList className="w-3 h-3" />
-                Problem Description
+                Issue
               </h4>
               <ServiceDetails
                 request={request}
                 payload={servicePayload}
                 onSaveGroupNotes={handleSaveGroupNotes}
                 onToggleGroupDone={handleToggleGroupDone}
-                onSaveAdditionalNotes={handleSaveAdditionalNotes}
+                onSaveInternalNotes={handleSaveInternalNotes}
               />
             </div>
 
@@ -620,6 +710,11 @@ export default function Dashboard() {
       return matchesSearch && matchesFilter;
     }) ?? [];
 
+  const activeRequests = filteredRequests.filter((r) => r.status !== "completed");
+  const completedRequests = filteredRequests.filter((r) => r.status === "completed");
+  const showActiveSection = filter !== "completed";
+  const showCompletedSection = filter === "all" || filter === "completed";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -643,13 +738,18 @@ export default function Dashboard() {
 
             <Select value={filter} onValueChange={setFilter}>
               <SelectTrigger className="sm:w-[200px]">
-                <SelectValue placeholder="Filter status" />
+                <SelectValue placeholder="Filter status">
+                  {STATUS_LABELS[filter] ?? filter}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                {(["all", "pending", "in_progress", "completed"] as const)
+                  .filter((value) => value !== filter)
+                  .map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {STATUS_LABELS[value] ?? value}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -668,15 +768,42 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {filteredRequests.map((request) => (
-              <RequestCard
-                key={request.id}
-                request={request}
-                onUpdate={(payload) => updateMutation.mutate(payload)}
-                isUpdating={updateMutation.isPending}
-              />
-            ))}
+          <div className="space-y-8">
+            {showActiveSection && (
+              <div className="space-y-3">
+                <div className="text-xs uppercase tracking-[0.3em] text-primary">
+                  Incoming Requests ({activeRequests.length})
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {activeRequests.map((request) => (
+                    <RequestCard
+                      key={request.id}
+                      request={request}
+                      onUpdate={(payload) => updateMutation.mutate(payload)}
+                      isUpdating={updateMutation.isPending}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showCompletedSection && completedRequests.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                  Completed ({completedRequests.length})
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {completedRequests.map((request) => (
+                    <RequestCard
+                      key={request.id}
+                      request={request}
+                      onUpdate={(payload) => updateMutation.mutate(payload)}
+                      isUpdating={updateMutation.isPending}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
