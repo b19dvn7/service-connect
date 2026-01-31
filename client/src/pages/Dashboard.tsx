@@ -27,7 +27,11 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
-  Wrench
+  Wrench,
+  Phone,
+  Mail,
+  Building2,
+  X
 } from "lucide-react";
 
 function getStatusIcon(status: string) {
@@ -94,6 +98,14 @@ function formatVehicleLine(request: MaintenanceRequest): string {
   const color = request.vehicleColor?.trim();
   if (color) return `${base} • ${color}`;
   return base;
+}
+
+function getContactMeta(contactInfo?: string | null) {
+  const value = contactInfo?.trim();
+  if (!value) return null;
+  if (value.includes("@")) return { label: value, Icon: Mail };
+  if (/\d/.test(value)) return { label: value, Icon: Phone };
+  return { label: value, Icon: Building2 };
 }
 
 function getCustomerNote(payload: ServicePayload | null, fallback?: string | null): string {
@@ -321,12 +333,16 @@ function RequestCard({
   isUpdating,
   isDialogOpen,
   onDialogOpenChange,
+  onDelete,
+  isDeleting,
 }: {
   request: MaintenanceRequest;
   onUpdate: (payload: UpdatePayload) => void;
   isUpdating: boolean;
   isDialogOpen: boolean;
   onDialogOpenChange: (nextId: number | null) => void;
+  onDelete: (id: number) => void;
+  isDeleting: boolean;
 }) {
   const form = useForm({
     defaultValues: {
@@ -346,6 +362,7 @@ function RequestCard({
 
   const servicePayload = parseServicePayload(request.description);
   const vehicleLine = formatVehicleLine(request);
+  const contactMeta = getContactMeta(request.contactInfo);
   const showNew = isNewRequest(request);
   const hasUpdates = Boolean(request.workDone || request.partsUsed);
   const handleDialogOpenChange = (next: boolean) => {
@@ -425,20 +442,28 @@ function RequestCard({
               <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                 WO #{request.id.toString().padStart(4, "0")}
               </span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" onClick={handleNameClick} className="text-left">
-                      <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                        {request.customerName}
-                      </CardTitle>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-xs">
-                    {request.contactInfo}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {contactMeta ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" onClick={handleNameClick} className="text-left">
+                        <CardTitle className="text-xl uppercase font-display cursor-pointer">
+                          {request.customerName}
+                        </CardTitle>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      {contactMeta.label}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <button type="button" onClick={handleNameClick} className="text-left">
+                  <CardTitle className="text-xl uppercase font-display cursor-pointer">
+                    {request.customerName}
+                  </CardTitle>
+                </button>
+              )}
               {request.isUrgent && (
                 <Badge variant="destructive" className="animate-pulse">
                   Urgent
@@ -448,7 +473,10 @@ function RequestCard({
                 value={request.status}
                 onValueChange={(value) => onUpdate({ id: request.id, status: value })}
               >
-                <SelectTrigger className="h-7 w-[110px] px-2 text-[10px] uppercase tracking-widest border-white/15 bg-background/40">
+                <SelectTrigger
+                  hideChevron
+                  className="h-7 w-[110px] px-2 text-[10px] uppercase tracking-widest border-white/15 bg-background/40"
+                >
                   <SelectValue placeholder="Status">
                     <span className="flex items-center gap-1">
                       {getStatusIcon(request.status)}
@@ -475,19 +503,27 @@ function RequestCard({
               </p>
             ) : null}
 
+            {contactMeta ? (
+              <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
+                <contactMeta.Icon className="w-3 h-3 opacity-70" />
+                {contactMeta.label}
+              </div>
+            ) : null}
+
             <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
               <Calendar className="w-3 h-3 opacity-70" />
               {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
             </div>
           </div>
 
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-7 px-2 text-[10px]">
-                <PenBox className="w-3.5 h-3.5 mr-2" />
-                Manage
-              </Button>
-            </DialogTrigger>
+          <div className="flex w-full sm:w-auto items-center justify-start sm:justify-end gap-2">
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-7 px-2 text-[10px]">
+                  <PenBox className="w-3.5 h-3.5 mr-2" />
+                  Manage
+                </Button>
+              </DialogTrigger>
 
             <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full bg-background border-white/10">
               <DialogHeader>
@@ -599,6 +635,18 @@ function RequestCard({
             </Form>
           </DialogContent>
         </Dialog>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(request.id)}
+              disabled={isDeleting}
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              aria-label="Delete request"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
       </CardHeader>
 
         <CardContent className="pt-0">
@@ -695,6 +743,37 @@ export default function Dashboard() {
       });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const path = api.requests.delete.path.replace(":id", id.toString());
+      const res = await fetch(path, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Delete failed (${res.status})`);
+      }
+      return res.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: [api.requests.list.path] });
+      toast({ title: "Deleted", description: "Work order removed." });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Delete failed",
+        description: err?.message || "Could not delete work order.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteRequest = (id: number) => {
+    if (!window.confirm("Delete this work order? This cannot be undone.")) return;
+    deleteMutation.mutate(id);
+  };
 
   if (isLoading) {
     return (
@@ -808,6 +887,8 @@ export default function Dashboard() {
                       isUpdating={updateMutation.isPending}
                       isDialogOpen={openRequestId === request.id}
                       onDialogOpenChange={setOpenRequestId}
+                      onDelete={handleDeleteRequest}
+                      isDeleting={deleteMutation.isPending}
                     />
                   ))}
                 </div>
@@ -828,6 +909,8 @@ export default function Dashboard() {
                       isUpdating={updateMutation.isPending}
                       isDialogOpen={openRequestId === request.id}
                       onDialogOpenChange={setOpenRequestId}
+                      onDelete={handleDeleteRequest}
+                      isDeleting={deleteMutation.isPending}
                     />
                   ))}
                 </div>

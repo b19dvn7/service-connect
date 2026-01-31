@@ -29,6 +29,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updated);
   });
 
+  app.delete("/api/requests/:id", async (req, res) => {
+    const deleted = await storage.deleteRequest(Number(req.params.id));
+    if (!deleted) return res.status(404).json({ message: "Request not found" });
+    res.json(deleted);
+  });
+
   // --- NEW: Invoice Routes ---
   
   // Create an invoice for a specific request
@@ -44,7 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get invoice by Request ID
   app.get("/api/invoices/request/:requestId", async (req, res) => {
-    const invoice = await storage.getInvoiceByRequestId(Number(req.params.requestId));
+    const invoice = await storage.getInvoiceByRequest(Number(req.params.requestId));
     if (!invoice) return res.status(404).json({ message: "Invoice not found" });
     res.json(invoice);
   });

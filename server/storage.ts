@@ -14,6 +14,7 @@ export interface IStorage {
   getRequests(): Promise<MaintenanceRequest[]>;
   getRequest(id: number): Promise<MaintenanceRequest | undefined>;
   updateRequest(id: number, updates: Partial<MaintenanceRequest>): Promise<MaintenanceRequest | undefined>;
+  deleteRequest(id: number): Promise<MaintenanceRequest | undefined>;
   
   // Invoice methods
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
@@ -51,6 +52,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(maintenanceRequests.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteRequest(id: number) {
+    const database = requireDb();
+    const [deleted] = await database.delete(maintenanceRequests)
+      .where(eq(maintenanceRequests.id, id))
+      .returning();
+    return deleted;
   }
   
   // Invoice methods
@@ -126,6 +135,13 @@ class MemoryStorage implements IStorage {
     };
     this.requests.set(id, updated);
     return updated;
+  }
+
+  async deleteRequest(id: number) {
+    const existing = this.requests.get(id);
+    if (!existing) return undefined;
+    this.requests.delete(id);
+    return existing;
   }
 
   async createInvoice(invoice: InsertInvoice) {

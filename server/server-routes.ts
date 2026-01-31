@@ -53,6 +53,14 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     }
   });
 
+  app.delete(api.requests.delete.path, isAuthenticated, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(404).json({ message: "Invalid ID" });
+    const deleted = await storage.deleteRequest(id);
+    if (!deleted) return res.status(404).json({ message: "Request not found" });
+    res.json(deleted);
+  });
+
   // Invoice routes
   app.get(api.invoices.list.path, isAuthenticated, async (_req, res) => {
     const invoices = await storage.getInvoices();

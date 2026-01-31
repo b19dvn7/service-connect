@@ -63,6 +63,14 @@ export const api = {
         404: errorSchemas.notFound,
       },
     },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/requests/:id',
+      responses: {
+        200: z.custom<typeof maintenanceRequests.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
   },
   invoices: {
     list: {

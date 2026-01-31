@@ -358,9 +358,15 @@ export default function SubmitRequest() {
                       name="contactInfo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">Phone Number</FormLabel>
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                            Phone / Email / Company
+                          </FormLabel>
                           <FormControl>
-                            <Input placeholder="(555) 000-0000" {...field} className="bg-background/30 border-white/5 h-10 text-sm" />
+                            <Input
+                              placeholder="Phone, email, or company name"
+                              {...field}
+                              className="bg-background/30 border-white/5 h-10 text-sm"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
