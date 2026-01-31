@@ -17,11 +17,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { Loader2, AlertTriangle, Send } from "lucide-react";
+import { Loader2, AlertTriangle, Send, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLocation } from "wouter";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 const SERVICE_GROUPS = {
@@ -75,10 +76,12 @@ export default function SubmitRequest() {
     components: "",
   });
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [issueText, setIssueText] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [engineOilWeights, setEngineOilWeights] = useState<string[]>([]);
   const [engineOilTypes, setEngineOilTypes] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const complaintRef = useRef<HTMLTextAreaElement | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,6 +121,7 @@ export default function SubmitRequest() {
         "Gaskets / Seals": { items: selected.gaskets, notes: groupNotes.gaskets },
         "Major Components": { items: selected.components, notes: groupNotes.components },
       },
+      issueText,
       additionalNotes,
       attachments: [] as { name: string; url: string }[],
     };
@@ -155,6 +159,7 @@ export default function SubmitRequest() {
           form.reset();
           setSelected({ filters: [], fluids: [], gaskets: [], components: [] });
           setGroupNotes({ filters: "", fluids: "", gaskets: "", components: "" });
+          setIssueText("");
           setAdditionalNotes("");
           setAttachments([]);
           setEngineOilWeights([]);
@@ -164,6 +169,21 @@ export default function SubmitRequest() {
       },
     );
   }
+
+  const resizeComplaint = (value: string) => {
+    const el = complaintRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+    setIssueText(value);
+  };
+
+  useEffect(() => {
+    if (complaintRef.current) {
+      complaintRef.current.style.height = "auto";
+      complaintRef.current.style.height = `${complaintRef.current.scrollHeight}px`;
+    }
+  }, [issueText]);
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-grid-pattern">
@@ -302,6 +322,19 @@ export default function SubmitRequest() {
                 </div>
 
                 <div className="space-y-6">
+                  <div className="space-y-2">
+                    <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                      Main Complaint
+                    </FormLabel>
+                    <Textarea
+                      ref={complaintRef}
+                      placeholder="What is the main issue? (auto-expands)"
+                      className="min-h-[90px] bg-background/40 border-white/10 resize-none text-sm focus:border-primary/50 transition-colors overflow-hidden"
+                      value={issueText}
+                      onChange={(e) => resizeComplaint(e.target.value)}
+                    />
+                  </div>
+
                   <div className="space-y-3">
                     <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Select Services
@@ -314,104 +347,123 @@ export default function SubmitRequest() {
                           gaskets: "Gaskets / Seals",
                           components: "Major Components",
                         };
+                        const selectedCount = selected[groupKey].length;
+                        const hasNotes = Boolean(groupNotes[groupKey]?.trim());
                         return (
-                          <div
+                          <Collapsible
                             key={groupKey}
-                            className="rounded-sm border border-white/15 bg-secondary/20 p-4 space-y-3 shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                            defaultOpen={selectedCount > 0 || hasNotes}
+                            className="rounded-sm border border-white/15 bg-secondary/20 p-3 shadow-[0_0_20px_rgba(0,0,0,0.25)]"
                           >
-                            <div className="text-[11px] font-bold uppercase tracking-widest text-primary/90">
-                              {labelMap[groupKey]}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {SERVICE_GROUPS[groupKey].map((service) => {
-                                const active = selected[groupKey].includes(service);
-                                return (
-                                  <button
-                                    key={service}
-                                    type="button"
-                                    className={cn(
-                                      "cursor-pointer transition-all py-1 px-2 text-[11px] font-semibold rounded-sm border uppercase tracking-tight",
-                                      active
-                                        ? "text-primary bg-primary/15 border-primary/40"
-                                        : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
-                                    )}
-                                    onClick={() => toggleService(groupKey, service)}
-                                  >
-                                    {service}
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            {groupKey === "fluids" && selected.fluids.includes("Engine oil") && (
-                              <div className="space-y-2 rounded-sm border border-white/15 bg-background/50 p-3">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                                  Engine Oil Details
+                            <CollapsibleTrigger asChild>
+                              <button
+                                type="button"
+                                className="w-full flex items-center justify-between text-left"
+                              >
+                                <div className="text-[11px] font-bold uppercase tracking-widest text-primary/90">
+                                  {labelMap[groupKey]}
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                  {ENGINE_OIL_WEIGHTS.map((weight) => {
-                                    const active = engineOilWeights.includes(weight);
-                                    return (
-                                      <button
-                                        key={weight}
-                                        type="button"
-                                        className={cn(
-                                          "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
-                                          active
-                                            ? "text-primary bg-primary/15 border-primary/40"
-                                            : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
-                                        )}
-                                        onClick={() =>
-                                          setEngineOilWeights((prev) =>
-                                            prev.includes(weight)
-                                              ? prev.filter((value) => value !== weight)
-                                              : [...prev, weight]
-                                          )
-                                        }
-                                      >
-                                        {weight}
-                                      </button>
-                                    );
-                                  })}
+                                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
+                                  {selectedCount > 0 ? `${selectedCount} selected` : "Select services"}
+                                  <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                  {ENGINE_OIL_TYPES.map((type) => {
-                                    const active = engineOilTypes.includes(type);
-                                    return (
-                                      <button
-                                        key={type}
-                                        type="button"
-                                        className={cn(
-                                          "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
-                                          active
-                                            ? "text-primary bg-primary/15 border-primary/40"
-                                            : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
-                                        )}
-                                        onClick={() =>
-                                          setEngineOilTypes((prev) =>
-                                            prev.includes(type)
-                                              ? prev.filter((value) => value !== type)
-                                              : [...prev, type]
-                                          )
-                                        }
-                                      >
-                                        {type}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
+                              </button>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent className="mt-3 space-y-3">
+                              <div className="flex flex-wrap gap-2">
+                                {SERVICE_GROUPS[groupKey].map((service) => {
+                                  const active = selected[groupKey].includes(service);
+                                  return (
+                                    <button
+                                      key={service}
+                                      type="button"
+                                      className={cn(
+                                        "cursor-pointer transition-all py-1 px-2 text-[11px] font-semibold rounded-sm border uppercase tracking-tight",
+                                        active
+                                          ? "text-primary bg-primary/15 border-primary/40"
+                                          : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                      )}
+                                      onClick={() => toggleService(groupKey, service)}
+                                    >
+                                      {service}
+                                    </button>
+                                  );
+                                })}
                               </div>
-                            )}
 
-                            <Textarea
-                              placeholder={`Notes for ${labelMap[groupKey].toLowerCase()} (optional)...`}
-                              className="min-h-[70px] bg-background/40 border-white/10 resize-none text-xs focus:border-primary/50 transition-colors"
-                              value={groupNotes[groupKey]}
-                              onChange={(e) =>
-                                setGroupNotes((prev) => ({ ...prev, [groupKey]: e.target.value }))
-                              }
-                            />
-                          </div>
+                              {groupKey === "fluids" && selected.fluids.includes("Engine oil") && (
+                                <div className="space-y-2 rounded-sm border border-white/15 bg-background/50 p-3">
+                                  <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    Engine Oil Details
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {ENGINE_OIL_WEIGHTS.map((weight) => {
+                                      const active = engineOilWeights.includes(weight);
+                                      return (
+                                        <button
+                                          key={weight}
+                                          type="button"
+                                          className={cn(
+                                            "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
+                                            active
+                                              ? "text-primary bg-primary/15 border-primary/40"
+                                              : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                          )}
+                                          onClick={() =>
+                                            setEngineOilWeights((prev) =>
+                                              prev.includes(weight)
+                                                ? prev.filter((value) => value !== weight)
+                                                : [...prev, weight]
+                                            )
+                                          }
+                                        >
+                                          {weight}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    {ENGINE_OIL_TYPES.map((type) => {
+                                      const active = engineOilTypes.includes(type);
+                                      return (
+                                        <button
+                                          key={type}
+                                          type="button"
+                                          className={cn(
+                                            "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
+                                            active
+                                              ? "text-primary bg-primary/15 border-primary/40"
+                                              : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                          )}
+                                          onClick={() =>
+                                            setEngineOilTypes((prev) =>
+                                              prev.includes(type)
+                                                ? prev.filter((value) => value !== type)
+                                                : [...prev, type]
+                                            )
+                                          }
+                                        >
+                                          {type}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                                Add notes
+                              </div>
+                              <Textarea
+                                placeholder={`Notes for ${labelMap[groupKey].toLowerCase()} (optional)...`}
+                                className="min-h-[60px] bg-background/40 border-white/10 resize-none text-xs focus:border-primary/50 transition-colors"
+                                value={groupNotes[groupKey]}
+                                onChange={(e) =>
+                                  setGroupNotes((prev) => ({ ...prev, [groupKey]: e.target.value }))
+                                }
+                              />
+                            </CollapsibleContent>
+                          </Collapsible>
                         );
                       })}
                     </div>
