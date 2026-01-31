@@ -159,7 +159,7 @@ export default function SubmitRequest() {
           setAttachments([]);
           setEngineOilWeights([]);
           setEngineOilTypes([]);
-          setTimeout(() => setLocation("/dashboard"), 1500);
+          setTimeout(() => setLocation("/"), 1200);
         },
       },
     );
@@ -187,8 +187,120 @@ export default function SubmitRequest() {
             className="bg-card/70 backdrop-blur-md border border-white/15 p-8 rounded-sm shadow-2xl shadow-black/40"
           >
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+
+                <div className="space-y-4 border-b border-white/5 pb-4">
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="customerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="uppercase text-[9px] font-bold tracking-widest text-foreground/70">
+                            Customer Name
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Name..."
+                              {...field}
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contactInfo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="uppercase text-[9px] font-bold tracking-widest text-foreground/70">
+                            Phone / Email / Company
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Phone, email, or company name"
+                              {...field}
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="vehicleInfo"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel className="uppercase text-[9px] font-bold tracking-widest text-foreground/70">
+                            Truck Info
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Year/Make/Model"
+                              {...field}
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="vehicleColor"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="uppercase text-[9px] font-bold tracking-widest text-foreground/70">
+                            Color
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. White"
+                              {...field}
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="mileage"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-1">
+                          <FormLabel className="uppercase text-[9px] font-bold tracking-widest text-foreground/70">
+                            Miles
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="e.g. 452000"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-6">
                   <div className="space-y-3">
                     <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
@@ -337,98 +449,6 @@ export default function SubmitRequest() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/5 space-y-6">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="customerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">Customer Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Name..." {...field} className="bg-background/30 border-white/5 h-10 text-sm" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="contactInfo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
-                            Phone / Email / Company
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Phone, email, or company name"
-                              {...field}
-                              className="bg-background/30 border-white/5 h-10 text-sm"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="vehicleInfo"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">Truck Info</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Year/Make/Model" {...field} className="bg-background/30 border-white/5 h-10 text-sm" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="mileage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">Miles</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="e.g. 452000"
-                                className="bg-background/30 border-white/5 h-10 text-sm"
-                                value={field.value ?? ""}
-                                onChange={(e) =>
-                                  field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="vehicleColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">Color</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. White" {...field} className="bg-background/30 border-white/5 h-10 text-sm" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
                 <FormField
                   control={form.control}
                   name="isUrgent"
@@ -453,22 +473,24 @@ export default function SubmitRequest() {
                   )}
                 />
 
-                <Button
-                  type="submit"
-                  disabled={isPending || isUploading}
-                  className="w-full h-14 text-lg font-bold uppercase tracking-wider bg-primary hover:bg-primary/90 mt-4 rounded-sm"
-                >
-                  {isPending || isUploading ? (
-                    <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {isUploading ? "Uploading..." : "Processing..."}
-                    </>
-                  ) : (
-                    <>
-                      Submit Service Request <Send className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </Button>
+                <div className="flex justify-center">
+                  <Button
+                    type="submit"
+                    disabled={isPending || isUploading}
+                    className="w-full md:w-auto md:px-10 h-12 text-base font-bold uppercase tracking-wider bg-primary hover:bg-primary/90 mt-3 rounded-sm"
+                  >
+                    {isPending || isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        {isUploading ? "Uploading..." : "Processing..."}
+                      </>
+                    ) : (
+                      <>
+                        Submit Service Request <Send className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
           </motion.div>
