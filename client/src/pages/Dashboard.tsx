@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { getLoginPath } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import {
   ClipboardList,
   Truck,
@@ -105,6 +106,17 @@ function getContactMeta(contactInfo?: string | null) {
   if (value.includes("@")) return { label: value, Icon: Mail };
   if (/\d/.test(value)) return { label: value, Icon: Phone };
   return { label: value, Icon: Building2 };
+}
+
+function formatRequestDate(dateValue?: Date | string | null) {
+  if (!dateValue) return "N/A";
+  const date = typeof dateValue === "string" ? new Date(dateValue) : dateValue;
+  if (Number.isNaN(date.getTime())) return "N/A";
+  try {
+    return format(date, "MMM dd yyyy HHmm").toUpperCase();
+  } catch {
+    return date.toLocaleString();
+  }
 }
 
 function getCustomerNote(payload: ServicePayload | null, fallback?: string | null): string {
@@ -505,7 +517,7 @@ function RequestCard({
                 size="icon"
                 onClick={() => onDelete(request.id)}
                 disabled={isDeleting}
-                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 text-destructive/50 hover:text-destructive"
                 aria-label="Delete request"
               >
                 <X className="h-3.5 w-3.5" />
@@ -528,7 +540,7 @@ function RequestCard({
 
             <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
               <Calendar className="w-3 h-3 opacity-70" />
-              {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
+              {formatRequestDate(request.createdAt)}
             </div>
           </div>
 
