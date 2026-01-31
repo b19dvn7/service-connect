@@ -81,3 +81,14 @@ Database seeded with example requests
 6:13:05 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/pages/SubmitRequest.tsx, /src/components/InvoiceDialog.tsx
 6:14:13 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
 6:14:18 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/index.css
+6:39:49 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+6:39:49 AM [vite] (client) hmr update /src/components/Navbar.tsx, /src/index.css
+6:39:49 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/index.css
+6:39:49 AM [vite] (client) hmr update /src/pages/Home.tsx, /src/index.css
+6:39:49 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/pages/SubmitRequest.tsx, /src/components/InvoiceDialog.tsx
+6:39:49 AM [vite] (client) hmr update /src/pages/SubmitRequest.tsx, /src/pages/Dashboard.tsx, /src/components/InvoiceDialog.tsx
+6:40:04 AM [vite] (client) hmr update /src/App.tsx, /src/index.css
+6:40:04 AM [vite] (client) hmr update /src/components/Navbar.tsx, /src/index.css
+6:40:04 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/index.css
+6:40:04 AM [vite] (client) hmr update /src/pages/Home.tsx, /src/index.css
+6:40:04 AM [vite] (client) hmr update /src/pages/Dashboard.tsx, /src/pages/SubmitRequest.tsx, /src/components/InvoiceDialog.tsx
