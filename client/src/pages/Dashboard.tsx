@@ -311,9 +311,9 @@ function ServiceDetails({
               </button>
               <div className="space-y-0.5 text-sm text-muted-foreground">
                 {items.length > 0 ? (
-                  <ul className="space-y-1">
+                  <ul className="space-y-0.5 m-0 p-0 list-none">
                     {items.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-[13px]">
+                      <li key={item} className="flex items-center gap-2 text-[13px] leading-tight">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
                         {item}
                       </li>
@@ -331,7 +331,7 @@ function ServiceDetails({
                 value={group.notes}
                 placeholder="add notes   done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
-                className="text-[9px] whitespace-pre mt-1"
+                className="text-[9px] whitespace-pre"
                 placeholderClassName="text-muted-foreground/60"
                 valueClassName="text-foreground/70"
                 textareaClassName="min-h-[80px]"
