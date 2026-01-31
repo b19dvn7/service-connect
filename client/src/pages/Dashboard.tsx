@@ -55,6 +55,7 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "Open",
   completed: "Complete",
   all: "All",
+  active: "Active",
 };
 
 type ServiceGroup = {
@@ -113,7 +114,7 @@ function formatRequestDate(dateValue?: Date | string | null) {
   const date = typeof dateValue === "string" ? new Date(dateValue) : dateValue;
   if (Number.isNaN(date.getTime())) return "N/A";
   try {
-    return format(date, "MMM dd yyyy HHmm").toUpperCase();
+    return format(date, "MM/dd/yyyy HHmm");
   } catch {
     return date.toLocaleString();
   }
@@ -149,7 +150,7 @@ function ExpandableText({
     <button
       type="button"
       onClick={() => setExpanded((prev) => !prev)}
-      className={`text-left text-sm text-muted-foreground/90 ${
+      className={`text-left text-sm text-foreground/80 ${
         expanded ? "" : "line-clamp-1"
       }`}
     >
@@ -492,7 +493,7 @@ function RequestCard({
               >
                 <SelectTrigger
                   hideChevron
-                  className="h-7 w-[110px] px-2 text-[10px] uppercase tracking-widest border-white/15 bg-background/40"
+                  className="h-auto w-auto px-0 py-0 text-[10px] uppercase tracking-widest border-transparent bg-transparent shadow-none focus:ring-0 focus:ring-offset-0"
                 >
                   <SelectValue placeholder="Status">
                     <span className="flex items-center gap-1">
@@ -706,7 +707,7 @@ export default function Dashboard() {
   const { toast } = useToast();
 
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("pending");
+  const [filter, setFilter] = useState("active");
   const [openRequestId, setOpenRequestId] = useState<number | null>(null);
 
   const { data: requests, isLoading: requestsLoading } = useQuery<MaintenanceRequest[]>({
@@ -813,7 +814,11 @@ export default function Dashboard() {
         (r.description || "").toLowerCase().includes(search.toLowerCase());
 
       const matchesFilter =
-        filter === "all" ? true : r.status === filter;
+        filter === "all"
+          ? true
+          : filter === "active"
+            ? r.status !== "completed"
+            : r.status === filter;
 
       return matchesSearch && matchesFilter;
     }) ?? [];
@@ -851,7 +856,7 @@ export default function Dashboard() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {(["all", "pending", "in_progress", "completed"] as const)
+                {(["active", "pending", "in_progress", "completed", "all"] as const)
                   .filter((value) => value !== filter)
                   .map((value) => (
                     <SelectItem key={value} value={value}>
