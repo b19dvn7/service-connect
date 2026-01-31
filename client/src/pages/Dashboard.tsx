@@ -135,9 +135,12 @@ function getCustomerNote(payload: ServicePayload | null, fallback?: string | nul
 
 function isNewRequest(request: MaintenanceRequest): boolean {
   if (!request.createdAt) return false;
+  if (request.status !== "pending") return false;
   const created = new Date(request.createdAt).getTime();
+  const updated = request.updatedAt ? new Date(request.updatedAt).getTime() : created;
   const windowMs = NEW_REQUEST_WINDOW_HOURS * 60 * 60 * 1000;
-  return Date.now() - created < windowMs && request.status === "pending";
+  const changedAfterCreate = updated - created > 60 * 1000;
+  return Date.now() - created < windowMs && !changedAfterCreate;
 }
 
 function ExpandableText({
