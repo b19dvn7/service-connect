@@ -7,9 +7,11 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SubmitRequest from "@/pages/SubmitRequest";
 import Dashboard from "@/pages/Dashboard";
+import Login from "@/pages/Login";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { getLoginPath } from "@/lib/auth-utils";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,6 +28,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/submit" component={SubmitRequest} />
+      <Route path="/login" component={Login} />
       <Route path="/dashboard">
         {isAuthenticated ? <Dashboard /> : (
           <div className="flex flex-col items-center justify-center min-h-screen bg-background space-y-6 p-4">
@@ -36,7 +39,7 @@ function Router() {
             <Button 
               size="lg" 
               className="h-14 px-8 text-lg font-bold uppercase tracking-wider"
-              onClick={() => window.location.href = "/api/login"}
+              onClick={() => window.location.href = getLoginPath()}
             >
               Login
             </Button>

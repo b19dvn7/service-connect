@@ -17,6 +17,7 @@ import { InvoiceDialog } from "@/components/InvoiceDialog";
 import type { MaintenanceRequest } from "@shared/schema";
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { getLoginPath } from "@/lib/auth-utils";
 import {
   ClipboardList,
   PenBox,
@@ -105,7 +106,7 @@ export default function Dashboard() {
         <Navbar />
         <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 px-4">
           <h2 className="text-2xl font-bold uppercase font-display">Admin Access Required</h2>
-          <Button size="lg" onClick={() => (window.location.href = "/api/login")}>
+          <Button size="lg" onClick={() => (window.location.href = getLoginPath())}>
             Login
           </Button>
         </div>
