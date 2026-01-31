@@ -299,7 +299,7 @@ function ServiceDetails({
           const engineOil = label === "Fluids" ? group.engineOil : undefined;
 
           return (
-            <div key={label} className="space-y-2 flex flex-col h-full">
+            <div key={label} className="space-y-2">
               <button
                 type="button"
                 onClick={() => onToggleGroupDone(label, !isDone)}
@@ -309,7 +309,7 @@ function ServiceDetails({
               >
                 {label}
               </button>
-              <div className="space-y-1 text-sm text-muted-foreground flex-1">
+              <div className="space-y-1 text-sm text-muted-foreground">
                 {items.length > 0 ? (
                   <ul className="space-y-1">
                     {items.map((item) => (
@@ -778,9 +778,21 @@ export default function Dashboard() {
         method: "DELETE",
         credentials: "include",
       });
+      if (res.status === 401) {
+        throw new Error("Unauthorized. Please log in again.");
+      }
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         throw new Error(text || `Delete failed (${res.status})`);
+      }
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        const text = await res.text().catch(() => "");
+        throw new Error(
+          text?.includes("<!DOCTYPE")
+            ? "Server returned HTML. Restart the dev server."
+            : "Unexpected server response."
+        );
       }
       return res.json();
     },
