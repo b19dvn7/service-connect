@@ -350,7 +350,7 @@ export default function SubmitRequest() {
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="grid md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           {(Object.keys(SERVICE_GROUPS) as Array<keyof typeof SERVICE_GROUPS>).map((groupKey) => {
                             const labelMap = {
                               filters: "Filters",
