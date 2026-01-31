@@ -309,7 +309,7 @@ function ServiceDetails({
               >
                 {label}
               </button>
-              <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="space-y-0.5 text-sm text-muted-foreground">
                 {items.length > 0 ? (
                   <ul className="space-y-1">
                     {items.map((item) => (
@@ -329,10 +329,10 @@ function ServiceDetails({
               </div>
               <EditableNote
                 value={group.notes}
-                placeholder="add   notes   done"
+                placeholder="add notes   done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
-                className="text-[9px] whitespace-pre pl-[14px]"
-                placeholderClassName="text-muted-foreground/50"
+                className="text-[9px] whitespace-pre mt-1"
+                placeholderClassName="text-muted-foreground/60"
                 valueClassName="text-foreground/70"
                 textareaClassName="min-h-[80px]"
               />
