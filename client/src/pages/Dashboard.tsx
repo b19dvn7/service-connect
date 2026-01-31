@@ -24,7 +24,6 @@ import { format } from "date-fns";
 import {
   ClipboardList,
   Truck,
-  Calendar,
   Clock,
   CheckCircle2,
   Wrench,
@@ -101,6 +100,15 @@ function formatVehicleLine(request: MaintenanceRequest): string {
   return base;
 }
 
+function formatDisplayName(name?: string | null) {
+  if (!name) return "";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((part) => (part ? part[0].toUpperCase() + part.slice(1).toLowerCase() : ""))
+    .join(" ");
+}
+
 function getContactMeta(contactInfo?: string | null) {
   const value = contactInfo?.trim();
   if (!value) return null;
@@ -150,7 +158,7 @@ function ExpandableText({
     <button
       type="button"
       onClick={() => setExpanded((prev) => !prev)}
-      className={`text-left text-sm text-foreground/80 ${
+      className={`text-left text-sm text-foreground/90 ${
         expanded ? "" : "line-clamp-1"
       }`}
     >
@@ -318,10 +326,10 @@ function ServiceDetails({
               </div>
               <EditableNote
                 value={group.notes}
-                placeholder="Add notes done"
+                placeholder="Add   notes   done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
-                className="text-[10px]"
-                placeholderClassName="text-muted-foreground/60"
+                className="text-[9px] whitespace-pre pl-5"
+                placeholderClassName="text-muted-foreground/50"
                 valueClassName="text-foreground/70"
                 textareaClassName="min-h-[80px]"
               />
@@ -380,9 +388,11 @@ function RequestCard({
 
   const servicePayload = parseServicePayload(request.description);
   const vehicleLine = formatVehicleLine(request);
+  const displayName = formatDisplayName(request.customerName);
   const contactMeta = getContactMeta(request.contactInfo);
   const showNew = isNewRequest(request);
   const hasUpdates = Boolean(request.workDone || request.partsUsed);
+  const createdAtLabel = formatRequestDate(request.createdAt);
   const handleDialogOpenChange = (next: boolean) => {
     onDialogOpenChange(next ? request.id : null);
   };
@@ -458,7 +468,7 @@ function RequestCard({
                 </span>
               )}
               <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                WO #{request.id.toString().padStart(4, "0")}
+                WO #{request.id.toString().padStart(4, "0")} • {createdAtLabel}
               </span>
               {contactMeta ? (
                 <TooltipProvider>
@@ -466,7 +476,7 @@ function RequestCard({
                     <TooltipTrigger asChild>
                       <button type="button" onClick={handleNameClick} className="text-left">
                         <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                          {request.customerName}
+                        {displayName || request.customerName}
                         </CardTitle>
                       </button>
                     </TooltipTrigger>
@@ -478,7 +488,7 @@ function RequestCard({
               ) : (
                 <button type="button" onClick={handleNameClick} className="text-left">
                   <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                    {request.customerName}
+                    {displayName || request.customerName}
                   </CardTitle>
                 </button>
               )}
@@ -539,10 +549,6 @@ function RequestCard({
               </div>
             ) : null}
 
-            <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
-              <Calendar className="w-3 h-3 opacity-70" />
-              {formatRequestDate(request.createdAt)}
-            </div>
           </div>
 
           <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
