@@ -280,7 +280,7 @@ function ServiceDetails({
                 type="button"
                 onClick={() => onToggleGroupDone(label, !isDone)}
                 className={`text-left text-[11px] uppercase font-bold tracking-widest transition-colors ${
-                  isDone ? "text-foreground/60 line-through" : "text-primary"
+                  isDone ? "text-foreground/70 line-through" : "text-primary"
                 }`}
               >
                 {label}
@@ -308,7 +308,7 @@ function ServiceDetails({
                 placeholder="Add notes done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
                 className="text-[10px]"
-                placeholderClassName="text-muted-foreground/40"
+                placeholderClassName="text-muted-foreground/60"
                 valueClassName="text-foreground/70"
                 textareaClassName="min-h-[80px]"
               />
