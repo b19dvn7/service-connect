@@ -299,7 +299,7 @@ function ServiceDetails({
           const engineOil = label === "Fluids" ? group.engineOil : undefined;
 
           return (
-            <div key={label} className="space-y-2">
+            <div key={label} className="space-y-1.5">
               <button
                 type="button"
                 onClick={() => onToggleGroupDone(label, !isDone)}
@@ -327,12 +327,12 @@ function ServiceDetails({
                   </div>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 pt-0.5">
                 <EditableNote
                   value={group.notes}
                   placeholder="add notes"
                   onSave={(note) => onSaveGroupNotes(label, note)}
-                  className="text-[9px] whitespace-pre"
+                  className="text-[9px] uppercase tracking-widest"
                   placeholderClassName="text-muted-foreground/60"
                   valueClassName="text-foreground/70"
                   textareaClassName="min-h-[80px]"
@@ -340,10 +340,10 @@ function ServiceDetails({
                 <button
                   type="button"
                   onClick={() => onToggleGroupDone(label, !isDone)}
-                  className={`text-[9px] uppercase tracking-widest transition-colors ${
+                  className={`text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded-sm transition-colors ${
                     isDone
-                      ? "text-foreground/70"
-                      : "text-muted-foreground/60 hover:text-foreground"
+                      ? "text-foreground/70 border-white/20"
+                      : "text-muted-foreground/60 border-white/10 hover:text-foreground hover:border-white/30"
                   }`}
                 >
                   {isDone ? "completed" : "done"}
