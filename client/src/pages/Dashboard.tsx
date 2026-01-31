@@ -341,7 +341,7 @@ function ServiceDetails({
         })}
       </div>
 
-      <div className="border-t border-white/10 pt-3 space-y-2">
+      <div className="border-t border-white/10 pt-2 space-y-1">
         <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/70">
           Additional Notes
         </div>
@@ -350,6 +350,7 @@ function ServiceDetails({
           placeholder="Add notes"
           onSave={onSaveInternalNotes}
           className="text-[11px]"
+          textareaClassName="min-h-[36px] leading-tight"
         />
       </div>
     </div>
