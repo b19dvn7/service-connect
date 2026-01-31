@@ -13,6 +13,11 @@ import { api, buildUrl } from "@shared/routes";
 
 interface InvoiceDialogProps {
   request: MaintenanceRequest;
+  triggerLabel?: string;
+  triggerClassName?: string;
+  triggerVariant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
+  triggerSize?: "default" | "sm" | "lg" | "icon";
+  showIcon?: boolean;
 }
 
 const SERVICE_PREFIX = "SERVICE_JSON:";
@@ -48,7 +53,14 @@ function getRequestNotes(request: MaintenanceRequest): string {
   }
 }
 
-export function InvoiceDialog({ request }: InvoiceDialogProps) {
+export function InvoiceDialog({
+  request,
+  triggerLabel,
+  triggerClassName,
+  triggerVariant,
+  triggerSize,
+  showIcon = true,
+}: InvoiceDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -517,9 +529,16 @@ export function InvoiceDialog({ request }: InvoiceDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" size="sm" className="bg-green-600 hover:bg-green-700 w-full sm:w-auto">
-          <FileText className="w-4 h-4 mr-2" />
-          {invoice ? "View Invoice" : "Create Invoice"}
+        <Button
+          variant={triggerVariant ?? "default"}
+          size={triggerSize ?? "sm"}
+          className={
+            triggerClassName ??
+            "bg-green-600 hover:bg-green-700 w-full sm:w-auto"
+          }
+        >
+          {showIcon ? <FileText className="w-4 h-4 mr-2" /> : null}
+          {triggerLabel ?? (invoice ? "View Invoice" : "Create Invoice")}
         </Button>
       </DialogTrigger>
 

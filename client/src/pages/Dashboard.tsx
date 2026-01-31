@@ -476,6 +476,11 @@ function RequestCard({
         <CardHeader className="flex flex-col sm:flex-row sm:items-start gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
+              {request.isUrgent && (
+                <Badge variant="destructive" className="animate-pulse">
+                  Urgent
+                </Badge>
+              )}
               {showNew && (
                 <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
                   NEW
@@ -511,11 +516,6 @@ function RequestCard({
                   </CardTitle>
                 </button>
               )}
-              {request.isUrgent && (
-                <Badge variant="destructive" className="animate-pulse">
-                  Urgent
-                </Badge>
-              )}
               <Select
                 value={request.status}
                 onValueChange={(value) => onUpdate({ id: request.id, status: value })}
@@ -541,6 +541,14 @@ function RequestCard({
                     ))}
                 </SelectContent>
               </Select>
+              <InvoiceDialog
+                request={request}
+                triggerLabel="Invoice"
+                showIcon={false}
+                triggerVariant="ghost"
+                triggerSize="sm"
+                triggerClassName="h-7 px-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+              />
             </div>
 
             {vehicleLine ? (
