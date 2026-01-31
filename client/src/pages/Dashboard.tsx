@@ -327,15 +327,28 @@ function ServiceDetails({
                   </div>
                 ) : null}
               </div>
-              <EditableNote
-                value={group.notes}
-                placeholder="add notes   done"
-                onSave={(note) => onSaveGroupNotes(label, note)}
-                className="text-[9px] whitespace-pre"
-                placeholderClassName="text-muted-foreground/60"
-                valueClassName="text-foreground/70"
-                textareaClassName="min-h-[80px]"
-              />
+              <div className="flex items-center gap-2">
+                <EditableNote
+                  value={group.notes}
+                  placeholder="add notes"
+                  onSave={(note) => onSaveGroupNotes(label, note)}
+                  className="text-[9px] whitespace-pre"
+                  placeholderClassName="text-muted-foreground/60"
+                  valueClassName="text-foreground/70"
+                  textareaClassName="min-h-[80px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => onToggleGroupDone(label, !isDone)}
+                  className={`text-[9px] uppercase tracking-widest transition-colors ${
+                    isDone
+                      ? "text-foreground/70"
+                      : "text-muted-foreground/60 hover:text-foreground"
+                  }`}
+                >
+                  {isDone ? "completed" : "done"}
+                </button>
+              </div>
             </div>
           );
         })}
