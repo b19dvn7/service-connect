@@ -1,0 +1,83 @@
+@font-face {
+  font-family: "JanGraff";
+  src: url("/fonts/jan-graff.woff2?v=3") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Bold outlined “paint” look, low-color */
+.graffClock {
+  font-family: "JanGraff", sans-serif;
+  font-size: clamp(36px, 6vw, 84px);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  font-synthesis: none;
+
+  color: #f2f2f2; /* light fill */
+  -webkit-text-stroke: 3px #0b0b0b; /* dark outline */
+
+  text-shadow: none;
+}
+
+/* Optional “drip”/rough vibe: slight skew */
+.graffSkew {
+  transform: skewX(-6deg);
+  display: inline-block;
+}
+
+.sprite-clock {
+  --cell: clamp(22px, 3.8vw, 58px);
+  --month-w: clamp(62px, 9vw, 160px);
+  --month-h: clamp(36px, 5vw, 92px);
+  --cols: 4;
+  --rows: 3;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  line-height: 1;
+}
+
+.sprite-glyph {
+  margin-right: calc(var(--cell) * var(--gmr, -0.18));
+  width: var(--cell);
+  height: var(--cell);
+  display: inline-block;
+  background-image: url("/fonts/glyph-sprite.png?v=8");
+  background-size: calc(var(--cell) * var(--cols)) calc(var(--cell) * var(--rows));
+  background-position: calc(var(--gx) * var(--cell) * -1) calc(var(--gy) * var(--cell) * -1);
+  background-repeat: no-repeat;
+  filter: drop-shadow(2px 2px 0 #0b0b0b)
+    drop-shadow(1px 0 0 #0b0b0b)
+    drop-shadow(-1px 0 0 #0b0b0b)
+    drop-shadow(0 1px 0 #0b0b0b)
+    drop-shadow(0 -1px 0 #0b0b0b);
+}
+
+.sprite-gap {
+  width: calc(var(--cell) * 0.45);
+  height: var(--cell);
+}
+
+.months-glyph {
+  width: var(--month-w);
+  height: var(--month-h);
+  display: inline-block;
+  background-image: url("/fonts/months-sprite.png?v=10");
+  background-size: calc(var(--month-w) * 4) calc(var(--month-h) * 3);
+  background-position: calc(var(--mx) * var(--month-w) * -1) calc(var(--my) * var(--month-h) * -1);
+  background-repeat: no-repeat;
+  filter: drop-shadow(2px 2px 0 #0b0b0b)
+    drop-shadow(1px 0 0 #0b0b0b)
+    drop-shadow(-1px 0 0 #0b0b0b)
+    drop-shadow(0 1px 0 #0b0b0b)
+    drop-shadow(0 -1px 0 #0b0b0b);
+}
+.month-gap {
+  width: calc(var(--month-w) * 0.18);
+  height: var(--month-h);
+}
+
+.sprite-gap.gap-md { width: calc(var(--cell) * 0.06); }
+.sprite-gap.gap-yr { width: calc(var(--cell) * 0.30); }
+.sprite-gap.gap-yt { width: calc(var(--cell) * 0.85); }

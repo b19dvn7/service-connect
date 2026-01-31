@@ -1,0 +1,143 @@
+{
+  "input": "/mnt/data/GRAFFITI_FAT_NUMBERS.png",
+  "notes": "Digits extracted by connected-component grouping (dilated mask) not equal-square slicing. Clean mask from background-subtracted threshold + morphology.",
+  "component_groups": 12,
+  "order": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "6_alt",
+    "7_alt"
+  ],
+  "qc": {
+    "0": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 123163
+    },
+    "1": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 110710
+    },
+    "2": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 132400
+    },
+    "3": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 141756
+    },
+    "4": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 138106
+    },
+    "5": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 164062
+    },
+    "6": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 141047
+    },
+    "7": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 110516
+    },
+    "8": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 134881
+    },
+    "9": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 141409
+    },
+    "6_alt": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 135983
+    },
+    "7_alt": {
+      "border_alpha_max": 0,
+      "alpha_nonzero": 110747
+    }
+  },
+  "align_metrics": {
+    "0": {
+      "scale": 4.574468085106383,
+      "paste_x": 132,
+      "paste_y": 53,
+      "bbox_h": 188
+    },
+    "1": {
+      "scale": 4.550264550264551,
+      "paste_x": 189,
+      "paste_y": 52,
+      "bbox_h": 189
+    },
+    "2": {
+      "scale": 4.550264550264551,
+      "paste_x": 160,
+      "paste_y": 52,
+      "bbox_h": 189
+    },
+    "3": {
+      "scale": 4.574468085106383,
+      "paste_x": 132,
+      "paste_y": 53,
+      "bbox_h": 188
+    },
+    "4": {
+      "scale": 4.725274725274725,
+      "paste_x": 101,
+      "paste_y": 50,
+      "bbox_h": 182
+    },
+    "5": {
+      "scale": 4.623655913978495,
+      "paste_x": 128,
+      "paste_y": 52,
+      "bbox_h": 186
+    },
+    "6": {
+      "scale": 4.526315789473684,
+      "paste_x": 130,
+      "paste_y": 52,
+      "bbox_h": 190
+    },
+    "7": {
+      "scale": 4.526315789473684,
+      "paste_x": 134,
+      "paste_y": 52,
+      "bbox_h": 190
+    },
+    "6_alt": {
+      "scale": 4.526315789473684,
+      "paste_x": 125,
+      "paste_y": 52,
+      "bbox_h": 190
+    },
+    "7_alt": {
+      "scale": 4.50261780104712,
+      "paste_x": 134,
+      "paste_y": 53,
+      "bbox_h": 191
+    },
+    "8": {
+      "scale": 4.50261780104712,
+      "paste_x": 132,
+      "paste_y": 53,
+      "bbox_h": 191
+    },
+    "9": {
+      "scale": 4.526315789473684,
+      "paste_x": 128,
+      "paste_y": 52,
+      "bbox_h": 190
+    }
+  }
+}
