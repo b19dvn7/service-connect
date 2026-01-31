@@ -299,7 +299,7 @@ function ServiceDetails({
           const engineOil = label === "Fluids" ? group.engineOil : undefined;
 
           return (
-            <div key={label} className="space-y-2">
+            <div key={label} className="space-y-2 flex flex-col h-full">
               <button
                 type="button"
                 onClick={() => onToggleGroupDone(label, !isDone)}
@@ -309,7 +309,7 @@ function ServiceDetails({
               >
                 {label}
               </button>
-              <div className="space-y-1 text-sm text-muted-foreground">
+              <div className="space-y-1 text-sm text-muted-foreground flex-1">
                 {items.length > 0 ? (
                   <ul className="space-y-1">
                     {items.map((item) => (
