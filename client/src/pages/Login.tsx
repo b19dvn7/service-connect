@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertTriangle, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Login() {
   const [, setLocation] = useLocation();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +44,17 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
 
+      const payload = await response.json().catch(() => null);
+
       if (!response.ok) {
-        const message = (await response.json().catch(() => null))?.message;
+        const message = payload?.message;
         throw new Error(message || "Login failed");
+      }
+
+      if (payload?.user) {
+        queryClient.setQueryData(["/api/auth/user"], payload.user);
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       }
 
       setLocation(next);
