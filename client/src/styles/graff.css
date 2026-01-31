@@ -38,7 +38,8 @@
   line-height: 1;
   flex-shrink: 0;
   overflow: visible;
-  padding-right: calc(var(--cell) * 0.4);
+  padding-right: calc(var(--cell) * 0.9);
+  padding-left: calc(var(--cell) * 0.2);
 }
 
 .sprite-glyph {
@@ -84,3 +85,4 @@
 .sprite-gap.gap-md { width: calc(var(--cell) * 0.06); }
 .sprite-gap.gap-yr { width: calc(var(--cell) * 0.30); }
 .sprite-gap.gap-yt { width: calc(var(--cell) * 0.85); }
+.sprite-gap.gap-tail { width: calc(var(--cell) * 0.6); }

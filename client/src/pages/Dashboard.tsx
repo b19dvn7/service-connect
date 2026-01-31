@@ -19,6 +19,7 @@ import type { MaintenanceRequest } from "@shared/schema";
 import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { getLoginPath } from "@/lib/auth-utils";
+import { cn } from "@/lib/utils";
 import {
   ClipboardList,
   PenBox,
@@ -138,10 +139,14 @@ function EditableNote({
   value,
   placeholder,
   onSave,
+  className,
+  textareaClassName,
 }: {
   value?: string | null;
   placeholder: string;
   onSave: (next: string) => void;
+  className?: string;
+  textareaClassName?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
@@ -176,7 +181,10 @@ function EditableNote({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={handleBlur}
         autoFocus
-        className="bg-background/40 border-white/10 text-xs min-h-[90px]"
+        className={cn(
+          "bg-background/40 border-white/10 text-xs min-h-[90px]",
+          textareaClassName
+        )}
         placeholder={placeholder}
       />
     );
@@ -186,11 +194,13 @@ function EditableNote({
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className={`text-left text-xs transition-colors line-clamp-1 ${
+      className={cn(
+        "text-left text-xs transition-colors line-clamp-1",
         value?.trim()
           ? "text-foreground/70 hover:text-foreground"
-          : "text-muted-foreground/70 hover:text-foreground"
-      }`}
+          : "text-muted-foreground/70 hover:text-foreground",
+        className
+      )}
     >
       {value?.trim() ? value : placeholder}
     </button>
@@ -220,14 +230,15 @@ function ServiceDetails({
           text={customerNote}
           placeholder="No customer note provided."
         />
-        <EditableNote
-          value={undefined}
-          placeholder="Add internal notes"
-          onSave={onSaveInternalNotes}
-        />
-      </div>
-    );
-  }
+      <EditableNote
+        value={undefined}
+        placeholder="Add notes"
+        onSave={onSaveInternalNotes}
+        className="text-[11px]"
+      />
+    </div>
+  );
+}
 
   return (
     <div className="space-y-4">
@@ -245,7 +256,6 @@ function ServiceDetails({
         {SERVICE_GROUP_ORDER.map((label) => {
           const group = groups[label] ?? {};
           const items = group.items ?? [];
-          const hasNotes = Boolean(group.notes?.trim());
           const isDone = Boolean(group.completed);
           const engineOil = label === "Fluids" ? group.engineOil : undefined;
 
@@ -255,7 +265,7 @@ function ServiceDetails({
                 type="button"
                 onClick={() => onToggleGroupDone(label, !isDone)}
                 className={`text-left text-[11px] uppercase font-bold tracking-widest transition-colors ${
-                  isDone || hasNotes ? "text-muted-foreground/60 line-through" : "text-primary"
+                  isDone ? "text-foreground/60 line-through" : "text-primary"
                 }`}
               >
                 {label}
@@ -270,9 +280,7 @@ function ServiceDetails({
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <div className="text-[11px] text-muted-foreground/70">No selections</div>
-                )}
+                ) : null}
                 {engineOil?.weights?.length ? (
                   <div className="text-[11px] text-muted-foreground/80">
                     Engine oil: {engineOil.weights.join(", ")}
@@ -284,6 +292,8 @@ function ServiceDetails({
                 value={group.notes}
                 placeholder="Add notes done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
+                className="text-[11px] text-foreground/60"
+                textareaClassName="min-h-[80px]"
               />
             </div>
           );
@@ -291,13 +301,14 @@ function ServiceDetails({
       </div>
 
       <div className="border-t border-white/10 pt-3 space-y-2">
-        <div className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground">
-          Internal Notes
+        <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/70">
+          Additional Notes
         </div>
         <EditableNote
           value={payload.internalNotes}
-          placeholder="Add internal notes"
+          placeholder="Add notes"
           onSave={onSaveInternalNotes}
+          className="text-[11px]"
         />
       </div>
     </div>
@@ -308,10 +319,14 @@ function RequestCard({
   request,
   onUpdate,
   isUpdating,
+  isDialogOpen,
+  onDialogOpenChange,
 }: {
   request: MaintenanceRequest;
   onUpdate: (payload: UpdatePayload) => void;
   isUpdating: boolean;
+  isDialogOpen: boolean;
+  onDialogOpenChange: (nextId: number | null) => void;
 }) {
   const form = useForm({
     defaultValues: {
@@ -333,6 +348,13 @@ function RequestCard({
   const vehicleLine = formatVehicleLine(request);
   const showNew = isNewRequest(request);
   const hasUpdates = Boolean(request.workDone || request.partsUsed);
+  const handleDialogOpenChange = (next: boolean) => {
+    onDialogOpenChange(next ? request.id : null);
+  };
+
+  const handleNameClick = () => {
+    onDialogOpenChange(isDialogOpen ? null : request.id);
+  };
 
   const handleSaveGroupNotes = (groupKey: string, note: string) => {
     if (!servicePayload) return;
@@ -387,12 +409,12 @@ function RequestCard({
   };
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full">
       <Card
         key={request.id}
         className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
       >
-        <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4 space-y-0 pb-4">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-start gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
               {showNew && (
@@ -406,9 +428,11 @@ function RequestCard({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <CardTitle className="text-xl uppercase font-display cursor-help">
-                      {request.customerName}
-                    </CardTitle>
+                    <button type="button" onClick={handleNameClick} className="text-left">
+                      <CardTitle className="text-xl uppercase font-display cursor-pointer">
+                        {request.customerName}
+                      </CardTitle>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs">
                     {request.contactInfo}
@@ -445,22 +469,22 @@ function RequestCard({
             </div>
 
             {vehicleLine ? (
-              <p className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
                 <Truck className="w-4 h-4 opacity-70" />
                 {vehicleLine.toUpperCase()}
               </p>
             ) : null}
 
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
+            <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
               <Calendar className="w-3 h-3 opacity-70" />
               {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
             </div>
           </div>
 
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-8 px-3 text-xs">
-                <PenBox className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-7 px-2 text-[10px]">
+                <PenBox className="w-3.5 h-3.5 mr-2" />
                 Manage
               </Button>
             </DialogTrigger>
@@ -584,7 +608,7 @@ function RequestCard({
             }`}
           >
             <div className="space-y-3">
-              <h4 className="text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground/70">
                 <ClipboardList className="w-3 h-3" />
                 Issue
               </h4>
@@ -631,6 +655,7 @@ export default function Dashboard() {
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("pending");
+  const [openRequestId, setOpenRequestId] = useState<number | null>(null);
 
   const { data: requests, isLoading: requestsLoading } = useQuery<MaintenanceRequest[]>({
     queryKey: [api.requests.list.path],
@@ -770,7 +795,7 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-8">
             {showActiveSection && (
-              <div className="space-y-3">
+              <div className="space-y-3 max-w-3xl mx-auto">
                 <div className="text-xs uppercase tracking-[0.3em] text-primary">
                   Incoming Requests ({activeRequests.length})
                 </div>
@@ -781,6 +806,8 @@ export default function Dashboard() {
                       request={request}
                       onUpdate={(payload) => updateMutation.mutate(payload)}
                       isUpdating={updateMutation.isPending}
+                      isDialogOpen={openRequestId === request.id}
+                      onDialogOpenChange={setOpenRequestId}
                     />
                   ))}
                 </div>
@@ -788,7 +815,7 @@ export default function Dashboard() {
             )}
 
             {showCompletedSection && completedRequests.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 max-w-3xl mx-auto">
                 <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                   Completed ({completedRequests.length})
                 </div>
@@ -799,6 +826,8 @@ export default function Dashboard() {
                       request={request}
                       onUpdate={(payload) => updateMutation.mutate(payload)}
                       isUpdating={updateMutation.isPending}
+                      isDialogOpen={openRequestId === request.id}
+                      onDialogOpenChange={setOpenRequestId}
                     />
                   ))}
                 </div>

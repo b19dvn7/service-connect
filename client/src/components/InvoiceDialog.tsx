@@ -22,7 +22,27 @@ function getRequestNotes(request: MaintenanceRequest): string {
   if (!description.startsWith(SERVICE_PREFIX)) return "";
   try {
     const payload = JSON.parse(description.slice(SERVICE_PREFIX.length));
-    return payload.internalNotes || payload.additionalNotes || "";
+    const notes: string[] = [];
+
+    if (typeof payload.internalNotes === "string" && payload.internalNotes.trim()) {
+      notes.push(payload.internalNotes.trim());
+    }
+
+    if (payload.groups && typeof payload.groups === "object") {
+      Object.entries(payload.groups).forEach(([label, group]) => {
+        const note = (group as { notes?: string })?.notes?.trim();
+        if (note) notes.push(`${label}: ${note}`);
+      });
+    }
+
+    if (!notes.length) {
+      const fallback = payload.additionalNotes || payload.issueText;
+      if (typeof fallback === "string" && fallback.trim()) {
+        notes.push(fallback.trim());
+      }
+    }
+
+    return notes.join("\n");
   } catch {
     return "";
   }

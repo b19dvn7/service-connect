@@ -109,6 +109,7 @@ export default function SpriteClock() {
           />
         );
       })}
+      <span className="sprite-gap gap-tail" />
     </div>
   );
 }
