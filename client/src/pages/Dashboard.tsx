@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,6 @@ import { getLoginPath } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
 import {
   ClipboardList,
-  PenBox,
   Truck,
   Calendar,
   Clock,
@@ -153,12 +152,16 @@ function EditableNote({
   onSave,
   className,
   textareaClassName,
+  valueClassName,
+  placeholderClassName,
 }: {
   value?: string | null;
   placeholder: string;
   onSave: (next: string) => void;
   className?: string;
   textareaClassName?: string;
+  valueClassName?: string;
+  placeholderClassName?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(value ?? "");
@@ -209,8 +212,8 @@ function EditableNote({
       className={cn(
         "text-left text-xs transition-colors line-clamp-1",
         value?.trim()
-          ? "text-foreground/70 hover:text-foreground"
-          : "text-muted-foreground/70 hover:text-foreground",
+          ? cn("text-foreground/70 hover:text-foreground", valueClassName)
+          : cn("text-muted-foreground/70 hover:text-foreground", placeholderClassName),
         className
       )}
     >
@@ -304,7 +307,9 @@ function ServiceDetails({
                 value={group.notes}
                 placeholder="Add notes done"
                 onSave={(note) => onSaveGroupNotes(label, note)}
-                className="text-[11px] text-foreground/60"
+                className="text-[10px]"
+                placeholderClassName="text-muted-foreground/40"
+                valueClassName="text-foreground/70"
                 textareaClassName="min-h-[80px]"
               />
             </div>
@@ -494,6 +499,17 @@ function RequestCard({
                     ))}
                 </SelectContent>
               </Select>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(request.id)}
+                disabled={isDeleting}
+                className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                aria-label="Delete request"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
             </div>
 
             {vehicleLine ? (
@@ -516,15 +532,7 @@ function RequestCard({
             </div>
           </div>
 
-          <div className="flex w-full sm:w-auto items-center justify-start sm:justify-end gap-2">
-            <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto h-7 px-2 text-[10px]">
-                  <PenBox className="w-3.5 h-3.5 mr-2" />
-                  Manage
-                </Button>
-              </DialogTrigger>
-
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full bg-background border-white/10">
               <DialogHeader>
                 <DialogTitle className="uppercase font-display text-base sm:text-lg">
@@ -635,18 +643,6 @@ function RequestCard({
             </Form>
           </DialogContent>
         </Dialog>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(request.id)}
-              disabled={isDeleting}
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              aria-label="Delete request"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
       </CardHeader>
 
         <CardContent className="pt-0">
@@ -656,10 +652,6 @@ function RequestCard({
             }`}
           >
             <div className="space-y-3">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-muted-foreground/70">
-                <ClipboardList className="w-3 h-3" />
-                Issue
-              </h4>
               <ServiceDetails
                 request={request}
                 payload={servicePayload}
