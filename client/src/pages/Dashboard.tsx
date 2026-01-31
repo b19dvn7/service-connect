@@ -460,22 +460,22 @@ function RequestCard({
     <div className="w-full">
       <Card
         key={request.id}
-        className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
+        className="bg-card/80 backdrop-blur border-white/5 overflow-visible relative"
       >
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(request.id)}
+          disabled={isDeleting}
+          className="absolute left-3 top-3 h-6 w-6 text-destructive/50 hover:text-destructive"
+          aria-label="Delete request"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
         <CardHeader className="flex flex-col sm:flex-row sm:items-start gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(request.id)}
-                disabled={isDeleting}
-                className="h-6 w-6 text-destructive/50 hover:text-destructive"
-                aria-label="Delete request"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
               {showNew && (
                 <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
                   NEW
