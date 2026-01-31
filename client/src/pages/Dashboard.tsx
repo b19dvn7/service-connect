@@ -54,7 +54,7 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: "Open",
   completed: "Complete",
   all: "All",
-  active: "Active",
+  active: "Status",
 };
 
 type ServiceGroup = {
