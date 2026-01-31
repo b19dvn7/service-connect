@@ -39,6 +39,7 @@ Preferred communication style: Simple, everyday language.
 - **Public Routes**: Home page and request submission are accessible without login
 - **Local Auth (optional)**: Set `SIMPLE_AUTH_USER` and `SIMPLE_AUTH_PASS` to enable a basic username/password login form when not using Replit OIDC
 - **App Login Page (optional)**: Set `VITE_USE_APP_LOGIN=true` to use the in-app `/login` screen instead of `/api/login`
+- **Session Timeout (optional)**: Set `SIMPLE_AUTH_MAX_AGE_HOURS` to control how long simple-auth sessions stay active (default: 4 hours with rolling activity).
 
 ### Key Design Patterns
 - **Shared Types**: Schema definitions and route types shared between client and server via `@shared/*` path alias
@@ -57,6 +58,7 @@ Preferred communication style: Simple, everyday language.
 - Environment variables: `ISSUER_URL`, `REPL_ID`, `SESSION_SECRET`
 - Optional local auth: `SIMPLE_AUTH_USER`, `SIMPLE_AUTH_PASS`
 - Optional app login UI: `VITE_USE_APP_LOGIN=true`
+- Optional session TTL: `SIMPLE_AUTH_MAX_AGE_HOURS`
 
 ### UI Component Library
 - shadcn/ui components built on Radix UI primitives

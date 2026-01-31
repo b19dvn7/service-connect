@@ -5,16 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import SpriteClock from "./SpriteClock";
+import { useAuth } from "@/hooks/use-auth";
+import { getLoginPath } from "@/lib/auth-utils";
 
 export function Navbar() {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const loginPath = getLoginPath();
   const links = [
     { href: "/", label: "Home" },
     { href: "/submit", label: "New Request" },
   ];
 
-  const adminLink = { href: "/dashboard", label: "Admin" };
+  const adminHref =
+    isAuthenticated
+      ? "/dashboard"
+      : loginPath === "/login"
+        ? "/login?next=/dashboard"
+        : "/api/login";
+  const adminLink = { href: adminHref, label: "Admin" };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

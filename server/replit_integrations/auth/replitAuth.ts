@@ -104,15 +104,22 @@ export function getSession() {
   const PgSession = connectPg(session);
 
   const hasDb = !!process.env.DATABASE_URL;
+  const simpleAuthMaxAgeHours = Number(process.env.SIMPLE_AUTH_MAX_AGE_HOURS ?? "4");
+  const simpleAuthMaxAgeMs =
+    SIMPLE_AUTH_ENABLED && Number.isFinite(simpleAuthMaxAgeHours)
+      ? simpleAuthMaxAgeHours * 60 * 60 * 1000
+      : undefined;
 
   return session({
     secret: process.env.SESSION_SECRET || "dev-insecure-session-secret-change-me",
     resave: false,
     saveUninitialized: false,
+    rolling: SIMPLE_AUTH_ENABLED,
     cookie: {
       // Behind Railway/Replit proxies. trust proxy is set in setupAuth.
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
+      ...(simpleAuthMaxAgeMs ? { maxAge: simpleAuthMaxAgeMs } : {}),
     },
     ...(hasDb
       ? {

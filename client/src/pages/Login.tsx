@@ -23,6 +23,13 @@ export default function Login() {
   const next = new URLSearchParams(search).get("next") || "/dashboard";
 
   useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("sc:lastUsername") : null;
+    if (saved && !username) {
+      setUsername(saved);
+    }
+  }, [username]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       setLocation(next);
     }
@@ -55,6 +62,10 @@ export default function Login() {
         queryClient.setQueryData(["/api/auth/user"], payload.user);
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("sc:lastUsername", username);
       }
 
       setLocation(next);

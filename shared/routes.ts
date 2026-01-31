@@ -56,6 +56,7 @@ export const api = {
         status: z.string().optional(),
         workDone: z.string().optional(),
         partsUsed: z.string().optional(),
+        description: z.string().optional(),
       }),
       responses: {
         200: z.custom<typeof maintenanceRequests.$inferSelect>(),

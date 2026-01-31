@@ -36,6 +36,9 @@
   align-items: center;
   gap: 0;
   line-height: 1;
+  flex-shrink: 0;
+  overflow: visible;
+  padding-right: calc(var(--cell) * 0.4);
 }
 
 .sprite-glyph {

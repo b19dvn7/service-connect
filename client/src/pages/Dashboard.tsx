@@ -15,17 +15,15 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { InvoiceDialog } from "@/components/InvoiceDialog";
 import type { MaintenanceRequest } from "@shared/schema";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { getLoginPath } from "@/lib/auth-utils";
 import {
   ClipboardList,
   PenBox,
   Truck,
-  User,
   Phone,
   Calendar,
-  AlertTriangle,
   Clock,
   CheckCircle2,
   Wrench
@@ -44,7 +42,208 @@ function getStatusIcon(status: string) {
   }
 }
 
-type UpdatePayload = { id: number; status: string; workDone?: string; partsUsed?: string };
+const SERVICE_PREFIX = "SERVICE_JSON:";
+const SERVICE_GROUP_ORDER = ["Filters", "Fluids", "Gaskets / Seals", "Major Components"] as const;
+const NEW_REQUEST_WINDOW_HOURS = 24;
+
+type ServiceGroup = {
+  items?: string[];
+  notes?: string;
+  completed?: boolean;
+  engineOil?: { weights?: string[]; types?: string[] };
+};
+
+type ServicePayload = {
+  groups?: Record<string, ServiceGroup>;
+  additionalNotes?: string;
+  attachments?: { name: string; url: string }[];
+};
+
+type UpdatePayload = {
+  id: number;
+  status?: string;
+  workDone?: string;
+  partsUsed?: string;
+  description?: string;
+};
+
+function parseServicePayload(description?: string | null): ServicePayload | null {
+  if (!description || !description.startsWith(SERVICE_PREFIX)) return null;
+  try {
+    return JSON.parse(description.slice(SERVICE_PREFIX.length));
+  } catch {
+    return null;
+  }
+}
+
+function serializeServicePayload(payload: ServicePayload): string {
+  return `${SERVICE_PREFIX}${JSON.stringify(payload)}`;
+}
+
+function formatVehicleLine(request: MaintenanceRequest): string {
+  const base = request.vehicleInfo?.trim() || "";
+  const color = request.vehicleColor?.trim();
+  if (color) return `${base} • ${color}`;
+  return base;
+}
+
+function isNewRequest(request: MaintenanceRequest): boolean {
+  if (!request.createdAt) return false;
+  const created = new Date(request.createdAt).getTime();
+  const windowMs = NEW_REQUEST_WINDOW_HOURS * 60 * 60 * 1000;
+  return Date.now() - created < windowMs && request.status === "pending";
+}
+
+function EditableNote({
+  value,
+  placeholder,
+  onSave,
+}: {
+  value?: string | null;
+  placeholder: string;
+  onSave: (next: string) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(value ?? "");
+    }
+  }, [isEditing, value]);
+
+  useEffect(() => {
+    if (!isEditing || !textareaRef.current) return;
+    const el = textareaRef.current;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft, isEditing]);
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    const next = draft.trim();
+    if (next !== (value ?? "")) {
+      onSave(next);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <Textarea
+        ref={textareaRef}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={handleBlur}
+        autoFocus
+        className="bg-background/40 border-white/10 text-xs min-h-[90px]"
+        placeholder={placeholder}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className={`text-left text-xs transition-colors ${
+        value?.trim()
+          ? "text-foreground/70 hover:text-foreground"
+          : "text-muted-foreground/70 hover:text-foreground"
+      }`}
+    >
+      {value?.trim() ? value : placeholder}
+    </button>
+  );
+}
+
+function ServiceDetails({
+  request,
+  payload,
+  onSaveGroupNotes,
+  onToggleGroupDone,
+  onSaveAdditionalNotes,
+}: {
+  request: MaintenanceRequest;
+  payload: ServicePayload | null;
+  onSaveGroupNotes: (groupKey: string, note: string) => void;
+  onToggleGroupDone: (groupKey: string, next: boolean) => void;
+  onSaveAdditionalNotes: (note: string) => void;
+}) {
+  if (!payload) {
+    return (
+      <p className="text-sm text-muted-foreground leading-relaxed italic">
+        {request.description || "No description provided."}
+      </p>
+    );
+  }
+
+  const groups = payload.groups ?? {};
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
+        {SERVICE_GROUP_ORDER.map((label) => {
+          const group = groups[label] ?? {};
+          const items = group.items ?? [];
+          const hasNotes = Boolean(group.notes?.trim());
+          const isDone = Boolean(group.completed);
+          const engineOil = label === "Fluids" ? group.engineOil : undefined;
+
+          return (
+            <div key={label} className="space-y-2">
+              <button
+                type="button"
+                onClick={() => onToggleGroupDone(label, !isDone)}
+                className={`text-left text-[11px] uppercase font-bold tracking-widest transition-colors ${
+                  isDone || hasNotes ? "text-muted-foreground/60 line-through" : "text-primary"
+                }`}
+              >
+                {label}
+              </button>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                {items.length > 0 ? (
+                  <ul className="space-y-1">
+                    {items.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-[13px]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-[11px] text-muted-foreground/70">No selections</div>
+                )}
+                {engineOil?.weights?.length ? (
+                  <div className="text-[11px] text-muted-foreground/80">
+                    Engine oil: {engineOil.weights.join(", ")}
+                    {engineOil.types?.length ? ` • ${engineOil.types.join(", ")}` : ""}
+                  </div>
+                ) : null}
+              </div>
+              <EditableNote
+                value={group.notes}
+                placeholder="Add notes done"
+                onSave={(note) => onSaveGroupNotes(label, note)}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="border-t border-white/10 pt-3 space-y-2">
+        <div className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground">
+          Additional Notes
+        </div>
+        <EditableNote
+          value={payload.additionalNotes}
+          placeholder="Add additional notes"
+          onSave={onSaveAdditionalNotes}
+        />
+      </div>
+    </div>
+  );
+}
 
 function RequestCard({
   request,
@@ -71,64 +270,117 @@ function RequestCard({
     });
   }, [form, request.partsUsed, request.status, request.workDone]);
 
+  const servicePayload = parseServicePayload(request.description);
+  const vehicleLine = formatVehicleLine(request);
+  const showNew = isNewRequest(request);
+  const hasUpdates = Boolean(request.workDone || request.partsUsed);
+
+  const handleSaveGroupNotes = (groupKey: string, note: string) => {
+    if (!servicePayload) return;
+    const groups = servicePayload.groups ?? {};
+    const currentGroup = groups[groupKey] ?? {};
+    const nextPayload: ServicePayload = {
+      ...servicePayload,
+      groups: {
+        ...groups,
+        [groupKey]: {
+          ...currentGroup,
+          notes: note,
+        },
+      },
+    };
+    onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
+  };
+
+  const handleSaveAdditionalNotes = (note: string) => {
+    if (!servicePayload) return;
+    const nextPayload: ServicePayload = {
+      ...servicePayload,
+      additionalNotes: note,
+    };
+    onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
+  };
+
+  const handleToggleGroupDone = (groupKey: string, next: boolean) => {
+    if (!servicePayload) return;
+    const groups = servicePayload.groups ?? {};
+    const currentGroup = groups[groupKey] ?? {};
+    const nextPayload: ServicePayload = {
+      ...servicePayload,
+      groups: {
+        ...groups,
+        [groupKey]: {
+          ...currentGroup,
+          completed: next,
+        },
+      },
+    };
+    onUpdate({ id: request.id, description: serializeServicePayload(nextPayload) });
+  };
+
   return (
-    <Card
-      key={request.id}
-      className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
-    >
-      <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 pb-4">
-        <div className="space-y-1">
-          <div className="flex items-center flex-wrap gap-2">
-            <span className="text-xs font-mono text-muted-foreground">
-              WO #{request.id.toString().padStart(4, "0")}
-            </span>
-            <CardTitle className="text-xl uppercase font-display">
-              {request.customerName}
-            </CardTitle>
-            {request.isUrgent && (
-              <Badge variant="destructive" className="animate-pulse">
-                Urgent
-              </Badge>
-            )}
-            <Badge variant="outline" className="flex gap-1 items-center border-white/10">
-              {getStatusIcon(request.status)}
-              <span className="uppercase text-[10px] font-bold tracking-tighter">
-                {request.status.replace("_", " ")}
+    <div className="w-full max-w-5xl mx-auto">
+      <Card
+        key={request.id}
+        className="bg-card/80 backdrop-blur border-white/5 overflow-visible"
+      >
+        <CardHeader className="flex flex-col sm:flex-row items-start justify-between gap-4 space-y-0 pb-4">
+          <div className="space-y-2">
+            <div className="flex items-center flex-wrap gap-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                WO #{request.id.toString().padStart(4, "0")}
               </span>
-            </Badge>
+              <CardTitle className="text-xl uppercase font-display">
+                {request.customerName}
+              </CardTitle>
+              {showNew && (
+                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
+                  New
+                </span>
+              )}
+              {request.isUrgent && (
+                <Badge variant="destructive" className="animate-pulse">
+                  Urgent
+                </Badge>
+              )}
+              <Badge variant="outline" className="flex gap-1 items-center border-white/10">
+                {getStatusIcon(request.status)}
+                <span className="uppercase text-[10px] font-bold tracking-tighter">
+                  {request.status.replace("_", " ")}
+                </span>
+              </Badge>
+            </div>
+
+            {vehicleLine ? (
+              <p className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Truck className="w-4 h-4 opacity-70" />
+                {vehicleLine.toUpperCase()}
+              </p>
+            ) : null}
+
+            <p className="text-xs text-muted-foreground flex items-center gap-2">
+              <Phone className="w-3 h-3 opacity-70" />
+              {request.contactInfo}
+              <span className="opacity-40">•</span>
+              <Calendar className="w-3 h-3 opacity-70" />
+              {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
+            </p>
           </div>
 
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <Truck className="w-4 h-4 opacity-70" />
-            {request.vehicleInfo}
-          </p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto">
+                <PenBox className="w-4 h-4 mr-2" />
+                Manage
+              </Button>
+            </DialogTrigger>
 
-          <p className="text-xs text-muted-foreground flex items-center gap-2">
-            <User className="w-3 h-3 opacity-70" />
-            {request.customerName}
-            <span className="opacity-40">•</span>
-            <Phone className="w-3 h-3 opacity-70" />
-            {request.contactInfo}
-            <span className="opacity-40">•</span>
-            <Calendar className="w-3 h-3 opacity-70" />
-            {request.createdAt ? new Date(request.createdAt).toLocaleString() : "N/A"}
-          </p>
-        </div>
-
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="border-white/10 hover:bg-primary/10 w-full sm:w-auto">
-              <PenBox className="w-4 h-4 mr-2" />
-              Manage
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
-            <DialogHeader>
-              <DialogTitle className="uppercase font-display text-base sm:text-lg">
-                Update Work Order #{request.id}
-              </DialogTitle>
-            </DialogHeader>
+            <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full bg-background border-white/10">
+              <DialogHeader>
+                <DialogTitle className="uppercase font-display text-base sm:text-lg">
+                  Update Work Order #{request.id}
+                </DialogTitle>
+              </DialogHeader>
 
             {/* FIX: Show complaint/description inside the Manage dialog */}
             <div className="rounded-lg border border-white/10 bg-secondary/20 p-3">
@@ -235,42 +487,51 @@ function RequestCard({
         </Dialog>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-secondary/20 p-4 rounded-lg border border-white/5">
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary">
-              <ClipboardList className="w-3 h-3" />
-              Problem Description
-            </h4>
-            <p className="text-sm text-muted-foreground leading-relaxed italic">
-              “{request.description}”
-            </p>
-          </div>
-
-          {(request.workDone || request.partsUsed) && (
-            <div className="space-y-4 md:border-l border-white/10 md:pl-6">
-              {request.workDone && (
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-green-500/80">
-                    Service Summary
-                  </h4>
-                  <p className="text-sm text-foreground/90">{request.workDone}</p>
-                </div>
-              )}
-
-              {request.partsUsed && (
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold uppercase tracking-widest text-orange-500/80">
-                    Parts Used
-                  </h4>
-                  <p className="text-sm text-foreground/90">{request.partsUsed}</p>
-                </div>
-              )}
+        <CardContent className="pt-0">
+          <div
+            className={`grid gap-6 bg-secondary/20 p-4 rounded-lg border border-white/5 ${
+              hasUpdates ? "grid-cols-1 md:grid-cols-[1.35fr_0.65fr]" : "grid-cols-1"
+            }`}
+          >
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-primary">
+                <ClipboardList className="w-3 h-3" />
+                Problem Description
+              </h4>
+              <ServiceDetails
+                request={request}
+                payload={servicePayload}
+                onSaveGroupNotes={handleSaveGroupNotes}
+                onToggleGroupDone={handleToggleGroupDone}
+                onSaveAdditionalNotes={handleSaveAdditionalNotes}
+              />
             </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+
+            {hasUpdates && (
+              <div className="space-y-4 md:border-l border-white/10 md:pl-6">
+                {request.workDone && (
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-green-500/80">
+                      Service Summary
+                    </h4>
+                    <p className="text-sm text-foreground/90">{request.workDone}</p>
+                  </div>
+                )}
+
+                {request.partsUsed && (
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-orange-500/80">
+                      Parts Used
+                    </h4>
+                    <p className="text-sm text-foreground/90">{request.partsUsed}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -286,17 +547,19 @@ export default function Dashboard() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (payload: { id: number; status: string; workDone?: string; partsUsed?: string }) => {
+    mutationFn: async (payload: UpdatePayload) => {
       const path = api.requests.update.path.replace(":id", payload.id.toString());
+      const body: Record<string, unknown> = {};
+      if (payload.status !== undefined) body.status = payload.status;
+      if (payload.workDone !== undefined) body.workDone = payload.workDone;
+      if (payload.partsUsed !== undefined) body.partsUsed = payload.partsUsed;
+      if (payload.description !== undefined) body.description = payload.description;
+
       const res = await fetch(path, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({
-          status: payload.status,
-          workDone: payload.workDone ?? "",
-          partsUsed: payload.partsUsed ?? "",
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
