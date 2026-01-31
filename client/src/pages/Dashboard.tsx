@@ -465,14 +465,30 @@ function RequestCard({
         <CardHeader className="flex flex-col sm:flex-row sm:items-start gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onDelete(request.id)}
+                disabled={isDeleting}
+                className="h-6 w-6 text-destructive/50 hover:text-destructive"
+                aria-label="Delete request"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
               {showNew && (
                 <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
                   NEW
                 </span>
               )}
-              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                WO #{request.id.toString().padStart(4, "0")} • {createdAtLabel}
-              </span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  WO #{request.id.toString().padStart(4, "0")}
+                </span>
+                <span className="text-[10px] text-muted-foreground/60">
+                  {createdAtLabel}
+                </span>
+              </div>
               {contactMeta ? (
                 <TooltipProvider>
                   <Tooltip>
@@ -525,17 +541,6 @@ function RequestCard({
                     ))}
                 </SelectContent>
               </Select>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(request.id)}
-                disabled={isDeleting}
-                className="h-6 w-6 text-destructive/50 hover:text-destructive"
-                aria-label="Delete request"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
             </div>
 
             {vehicleLine ? (
