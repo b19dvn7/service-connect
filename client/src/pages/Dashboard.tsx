@@ -6,7 +6,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -143,33 +142,6 @@ function isNewRequest(request: MaintenanceRequest): boolean {
   return Date.now() - created < windowMs && !changedAfterCreate;
 }
 
-function ExpandableText({
-  text,
-  placeholder,
-}: {
-  text?: string | null;
-  placeholder: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const display = text?.trim();
-
-  if (!display) {
-    return <p className="text-xs text-muted-foreground/70">{placeholder}</p>;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={() => setExpanded((prev) => !prev)}
-      className={`text-left text-sm text-foreground/90 ${
-        expanded ? "" : "line-clamp-1"
-      }`}
-    >
-      {display}
-    </button>
-  );
-}
-
 function EditableNote({
   value,
   placeholder,
@@ -221,7 +193,7 @@ function EditableNote({
         onBlur={handleBlur}
         autoFocus
         className={cn(
-          "bg-background/40 border-white/10 text-xs min-h-[90px]",
+          "bg-background/40 border-white/10 text-xs min-h-[32px] leading-tight",
           textareaClassName
         )}
         placeholder={placeholder}
@@ -246,6 +218,54 @@ function EditableNote({
   );
 }
 
+function InlineNote({
+  value,
+  placeholder,
+  onSave,
+  className,
+}: {
+  value?: string | null;
+  placeholder: string;
+  onSave: (next: string) => void;
+  className?: string;
+}) {
+  const [draft, setDraft] = useState(value ?? "");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    setDraft(value ?? "");
+  }, [value]);
+
+  useEffect(() => {
+    if (!textareaRef.current) return;
+    const el = textareaRef.current;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
+
+  const handleBlur = () => {
+    const next = draft.trim();
+    if (next !== (value ?? "")) {
+      onSave(next);
+    }
+  };
+
+  return (
+    <Textarea
+      ref={textareaRef}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={handleBlur}
+      rows={1}
+      placeholder={placeholder}
+      className={cn(
+        "bg-background/30 border-white/10 text-xs resize-none min-h-[28px] leading-tight overflow-hidden",
+        className
+      )}
+    />
+  );
+}
+
 function ServiceDetails({
   request,
   payload,
@@ -264,32 +284,32 @@ function ServiceDetails({
 
   if (!payload) {
     return (
-      <div className="space-y-4">
-        <ExpandableText
-          text={customerNote}
-          placeholder="No customer note provided."
-        />
-      <EditableNote
-        value={undefined}
-        placeholder="Add notes"
-        onSave={onSaveInternalNotes}
-        className="text-[11px]"
-      />
-    </div>
-  );
-}
+      <div className="space-y-3">
+        {customerNote?.trim() ? (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/70" />
+            <span className="text-foreground/85">{customerNote}</span>
+          </div>
+        ) : null}
+        <div className="space-y-1">
+          <InlineNote
+            value={undefined}
+            placeholder="notes"
+            onSave={onSaveInternalNotes}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <div className="text-[11px] uppercase font-bold tracking-widest text-muted-foreground">
-          Customer Note
+      {customerNote?.trim() ? (
+        <div className="flex items-start gap-2 text-sm text-muted-foreground">
+          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/70" />
+          <span className="text-foreground/85">{customerNote}</span>
         </div>
-        <ExpandableText
-          text={customerNote}
-          placeholder="No customer note provided."
-        />
-      </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         {SERVICE_GROUP_ORDER.map((label) => {
@@ -332,21 +352,19 @@ function ServiceDetails({
                   value={group.notes}
                   placeholder="add notes"
                   onSave={(note) => onSaveGroupNotes(label, note)}
-                  className="text-[9px] uppercase tracking-widest"
-                  placeholderClassName="text-muted-foreground/60"
-                  valueClassName="text-foreground/70"
-                  textareaClassName="min-h-[80px]"
+                  className="text-[10px] normal-case tracking-normal"
+                  placeholderClassName="text-muted-foreground/60 normal-case tracking-normal"
+                  valueClassName="text-foreground/70 normal-case tracking-normal"
+                  textareaClassName="min-h-[32px] leading-tight"
                 />
                 <button
                   type="button"
                   onClick={() => onToggleGroupDone(label, !isDone)}
-                  className={`text-[9px] uppercase tracking-widest border px-2 py-0.5 rounded-sm transition-colors ${
-                    isDone
-                      ? "text-foreground/70 border-white/20"
-                      : "text-muted-foreground/60 border-white/10 hover:text-foreground hover:border-white/30"
+                  className={`text-[10px] normal-case tracking-normal border-0 bg-transparent px-0 py-0 transition-colors ${
+                    isDone ? "text-foreground/70" : "text-muted-foreground/60 hover:text-foreground"
                   }`}
                 >
-                  {isDone ? "completed" : "done"}
+                  done
                 </button>
               </div>
             </div>
@@ -355,15 +373,11 @@ function ServiceDetails({
       </div>
 
       <div className="border-t border-white/10 pt-2 space-y-1">
-        <div className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground/70">
-          Additional Notes
-        </div>
-        <EditableNote
+        <InlineNote
           value={payload.internalNotes}
-          placeholder="Add notes"
+          placeholder="notes"
           onSave={onSaveInternalNotes}
-          className="text-[11px]"
-          textareaClassName="min-h-[36px] leading-tight"
+          className="text-[11px] min-h-[28px] h-7 py-1"
         />
       </div>
     </div>
@@ -410,6 +424,8 @@ function RequestCard({
   const showNew = isNewRequest(request);
   const hasUpdates = Boolean(request.workDone || request.partsUsed);
   const createdAtLabel = formatRequestDate(request.createdAt);
+  const [showRemove, setShowRemove] = useState(false);
+  const woNumber = request.id.toString().padStart(2, "0");
   const handleDialogOpenChange = (next: boolean) => {
     onDialogOpenChange(next ? request.id : null);
   };
@@ -474,62 +490,60 @@ function RequestCard({
     <div className="w-full">
       <Card
         key={request.id}
-        className="bg-card/80 backdrop-blur border-white/5 overflow-visible relative"
+        className="bg-secondary/25 backdrop-blur border-white/10 overflow-visible relative"
       >
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
           onClick={() => onDelete(request.id)}
           disabled={isDeleting}
-          className="absolute left-3 top-3 h-6 w-6 text-destructive/50 hover:text-destructive"
+          className="absolute right-4 top-4 h-6 w-6 text-destructive/50 hover:text-destructive transition-colors"
           aria-label="Delete request"
         >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+          <X className="h-4 w-4" />
+        </button>
         <CardHeader className="flex flex-col sm:flex-row sm:items-start gap-4 space-y-0 pb-4">
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
+              {showNew && (
+                <span className="text-[12px] font-semibold text-yellow-300">
+                  New
+                </span>
+              )}
               {request.isUrgent && (
-                <Badge variant="destructive" className="animate-pulse">
+                <Badge variant="destructive" className="animate-pulse uppercase tracking-wide">
                   Urgent
                 </Badge>
               )}
-              {showNew && (
-                <span className="text-xs font-bold uppercase tracking-widest text-yellow-400">
-                  NEW
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRemove((prev) => !prev)}
+                className="flex items-center gap-1 text-left"
+                aria-label="Toggle remove"
+              >
+                <span className="text-[11px] font-mono uppercase tracking-wider text-foreground/90">
+                  WO#
                 </span>
-              )}
-              <div className="flex flex-col leading-tight">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-                  WO #{request.id.toString().padStart(4, "0")}
+                <span className="text-[12px] font-mono text-foreground/90">
+                  {woNumber}
                 </span>
-                <span className="text-[10px] text-muted-foreground/60">
-                  {createdAtLabel}
-                </span>
-              </div>
-              {contactMeta ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button type="button" onClick={handleNameClick} className="text-left">
-                        <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                        {displayName || request.customerName}
-                        </CardTitle>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="text-xs">
-                      {contactMeta.label}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <button type="button" onClick={handleNameClick} className="text-left">
-                  <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                    {displayName || request.customerName}
-                  </CardTitle>
+              </button>
+              {showRemove && (
+                <button
+                  type="button"
+                  onClick={() => onDelete(request.id)}
+                  disabled={isDeleting}
+                  className="text-[10px] text-destructive/70 hover:text-destructive transition-colors"
+                >
+                  remove
                 </button>
               )}
+              <span className="text-[10px] text-muted-foreground/60">
+                {createdAtLabel}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
               <Select
                 value={request.status}
                 onValueChange={(value) => onUpdate({ id: request.id, status: value })}
@@ -555,13 +569,25 @@ function RequestCard({
                     ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center flex-wrap gap-3 w-full">
+              <button type="button" onClick={handleNameClick} className="text-left group relative leading-none">
+                <CardTitle className="text-xl uppercase font-display cursor-pointer">
+                  {displayName || request.customerName}
+                </CardTitle>
+                {contactMeta ? (
+                  <span className="pointer-events-none absolute left-0 bottom-full mb-0.5 text-[11px] text-foreground/80 opacity-0 transition-opacity group-hover:opacity-100">
+                    {contactMeta.label}
+                  </span>
+                ) : null}
+              </button>
               <InvoiceDialog
                 request={request}
                 triggerLabel="Invoice"
                 showIcon={false}
                 triggerVariant="ghost"
                 triggerSize="sm"
-                triggerClassName="h-7 px-2 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+                triggerClassName="h-7 px-2 text-[10px] uppercase tracking-widest text-foreground/90 hover:text-foreground"
               />
             </div>
 
@@ -572,12 +598,7 @@ function RequestCard({
               </p>
             ) : null}
 
-            {contactMeta ? (
-              <div className="text-[11px] text-muted-foreground/70 flex items-center gap-2">
-                <contactMeta.Icon className="w-3 h-3 opacity-70" />
-                {contactMeta.label}
-              </div>
-            ) : null}
+
 
           </div>
 
@@ -695,11 +716,12 @@ function RequestCard({
       </CardHeader>
 
         <CardContent className="pt-0">
-          <div
-            className={`grid gap-6 bg-secondary/20 p-4 rounded-lg border border-white/5 ${
-              hasUpdates ? "grid-cols-1 md:grid-cols-[1.35fr_0.65fr]" : "grid-cols-1"
-            }`}
-          >
+            <div
+              className={cn(
+                "grid gap-6",
+                hasUpdates ? "grid-cols-1 md:grid-cols-[1.35fr_0.65fr]" : "grid-cols-1"
+              )}
+            >
             <div className="space-y-3">
               <ServiceDetails
                 request={request}

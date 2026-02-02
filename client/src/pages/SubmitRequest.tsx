@@ -320,26 +320,28 @@ export default function SubmitRequest() {
                   </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-3">
-                    <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
+                    <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                       Select Services
                     </FormLabel>
                     <Collapsible
                       open={servicesOpen}
                       onOpenChange={setServicesOpen}
-                      className="space-y-4"
+                      className="space-y-2"
                     >
                       <CollapsibleTrigger asChild>
                         <button
                           type="button"
-                          className="w-full flex items-center justify-between rounded-sm border border-white/15 bg-secondary/20 px-4 py-3 text-left shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                          className="w-full flex items-center justify-between rounded-sm border border-white/15 bg-secondary/20 px-3 py-2 text-left"
                         >
-                          <div className="text-[11px] font-bold uppercase tracking-widest text-primary/90">
+                          <div className="text-[10px] font-bold uppercase tracking-widest text-primary/90">
                             Services
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
-                            {Object.values(selected).reduce((sum, items) => sum + items.length, 0)} selected
+                          <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground/70">
+                            {Object.values(selected).reduce((sum, items) => sum + items.length, 0) > 0
+                              ? `${Object.values(selected).reduce((sum, items) => sum + items.length, 0)} selected`
+                              : "Select services"}
                             <ChevronDown
                               className={cn(
                                 "h-3 w-3 transition-transform",
@@ -349,8 +351,8 @@ export default function SubmitRequest() {
                           </div>
                         </button>
                       </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="grid grid-cols-1 gap-4">
+                      <CollapsibleContent className="mt-1">
+                        <div className="space-y-2">
                           {(Object.keys(SERVICE_GROUPS) as Array<keyof typeof SERVICE_GROUPS>).map((groupKey) => {
                             const labelMap = {
                               filters: "Filters",
@@ -364,115 +366,123 @@ export default function SubmitRequest() {
                               <Collapsible
                                 key={groupKey}
                                 defaultOpen={selectedCount > 0 || hasNotes}
-                                className="rounded-sm border border-white/15 bg-secondary/20 p-3 shadow-[0_0_20px_rgba(0,0,0,0.25)]"
+                                className="border-l border-white/10 pl-3"
                               >
                                 <CollapsibleTrigger asChild>
                                   <button
                                     type="button"
-                                    className="w-full flex items-center justify-between text-left"
+                                    className="w-full flex items-center justify-between py-1 text-left"
                                   >
-                                    <div className="text-[11px] font-bold uppercase tracking-widest text-primary/90">
+                                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary/90">
                                       {labelMap[groupKey]}
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-muted-foreground/70">
-                                      {selectedCount > 0 ? `${selectedCount} selected` : "Select services"}
+                                    <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground/70">
+                                      {selectedCount > 0 ? `${selectedCount} selected` : "Select"}
                                       <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
                                     </div>
                                   </button>
                                 </CollapsibleTrigger>
-                                <CollapsibleContent className="mt-3 space-y-3">
-                                  <div className="flex flex-wrap gap-2">
+                                <CollapsibleContent className="mt-1 space-y-2">
+                                  <div className="space-y-1">
                                     {SERVICE_GROUPS[groupKey].map((service) => {
                                       const active = selected[groupKey].includes(service);
                                       return (
-                                        <button
+                                        <label
                                           key={service}
-                                          type="button"
                                           className={cn(
-                                            "cursor-pointer transition-all py-1 px-2 text-[11px] font-semibold rounded-sm border uppercase tracking-tight",
-                                            active
-                                              ? "text-primary bg-primary/15 border-primary/40"
-                                              : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                            "flex items-center gap-2 text-xs transition-colors",
+                                            active ? "text-foreground/90" : "text-muted-foreground/80"
                                           )}
-                                          onClick={() => toggleService(groupKey, service)}
                                         >
-                                          {service}
-                                        </button>
+                                          <input
+                                            type="checkbox"
+                                            checked={active}
+                                            onChange={() => toggleService(groupKey, service)}
+                                            className="h-3 w-3 accent-primary"
+                                          />
+                                          <span>{service}</span>
+                                        </label>
                                       );
                                     })}
                                   </div>
 
                                   {groupKey === "fluids" && selected.fluids.includes("Engine oil") && (
-                                    <div className="space-y-2 rounded-sm border border-white/15 bg-background/50 p-3">
-                                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    <div className="space-y-1 border-l border-white/10 pl-3">
+                                      <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70">
                                         Engine Oil Details
                                       </div>
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="space-y-1">
                                         {ENGINE_OIL_WEIGHTS.map((weight) => {
                                           const active = engineOilWeights.includes(weight);
                                           return (
-                                            <button
+                                            <label
                                               key={weight}
-                                              type="button"
                                               className={cn(
-                                                "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
-                                                active
-                                                  ? "text-primary bg-primary/15 border-primary/40"
-                                                  : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                                "flex items-center gap-2 text-[11px] uppercase tracking-tight",
+                                                active ? "text-foreground/90" : "text-muted-foreground/80"
                                               )}
-                                              onClick={() =>
-                                                setEngineOilWeights((prev) =>
-                                                  prev.includes(weight)
-                                                    ? prev.filter((value) => value !== weight)
-                                                    : [...prev, weight]
-                                                )
-                                              }
                                             >
-                                              {weight}
-                                            </button>
+                                              <input
+                                                type="checkbox"
+                                                checked={active}
+                                                onChange={() =>
+                                                  setEngineOilWeights((prev) =>
+                                                    prev.includes(weight)
+                                                      ? prev.filter((value) => value !== weight)
+                                                      : [...prev, weight]
+                                                  )
+                                                }
+                                                className="h-3 w-3 accent-primary"
+                                              />
+                                              <span>{weight}</span>
+                                            </label>
                                           );
                                         })}
                                       </div>
-                                      <div className="flex flex-wrap gap-2">
+                                      <div className="space-y-1">
                                         {ENGINE_OIL_TYPES.map((type) => {
                                           const active = engineOilTypes.includes(type);
                                           return (
-                                            <button
+                                            <label
                                               key={type}
-                                              type="button"
                                               className={cn(
-                                                "py-1 px-2 text-[10px] font-semibold rounded-sm border uppercase tracking-tight",
-                                                active
-                                                  ? "text-primary bg-primary/15 border-primary/40"
-                                                  : "text-foreground/70 hover:text-foreground bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
+                                                "flex items-center gap-2 text-[11px] uppercase tracking-tight",
+                                                active ? "text-foreground/90" : "text-muted-foreground/80"
                                               )}
-                                              onClick={() =>
-                                                setEngineOilTypes((prev) =>
-                                                  prev.includes(type)
-                                                    ? prev.filter((value) => value !== type)
-                                                    : [...prev, type]
-                                                )
-                                              }
                                             >
-                                              {type}
-                                            </button>
+                                              <input
+                                                type="checkbox"
+                                                checked={active}
+                                                onChange={() =>
+                                                  setEngineOilTypes((prev) =>
+                                                    prev.includes(type)
+                                                      ? prev.filter((value) => value !== type)
+                                                      : [...prev, type]
+                                                  )
+                                                }
+                                                className="h-3 w-3 accent-primary"
+                                              />
+                                              <span>{type}</span>
+                                            </label>
                                           );
                                         })}
                                       </div>
                                     </div>
                                   )}
 
-                                  <div className="text-[9px] uppercase tracking-widest text-muted-foreground/60">
-                                    Add notes
+                                  <div className="flex items-center gap-2 pt-1">
+                                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                                      Notes
+                                    </span>
+                                    <Input
+                                      placeholder="Add note (optional)"
+                                      className="h-7 bg-background/30 border-white/10 text-xs focus:border-primary/50"
+                                      value={groupNotes[groupKey]}
+                                      onChange={(e) =>
+                                        setGroupNotes((prev) => ({ ...prev, [groupKey]: e.target.value }))
+                                      }
+                                    />
                                   </div>
-                                  <Textarea
-                                    placeholder={`Notes for ${labelMap[groupKey].toLowerCase()} (optional)...`}
-                                    className="min-h-[60px] bg-background/40 border-white/10 resize-none text-xs focus:border-primary/50 transition-colors"
-                                    value={groupNotes[groupKey]}
-                                    onChange={(e) =>
-                                      setGroupNotes((prev) => ({ ...prev, [groupKey]: e.target.value }))
-                                    }
-                                  />
                                 </CollapsibleContent>
                               </Collapsible>
                             );
