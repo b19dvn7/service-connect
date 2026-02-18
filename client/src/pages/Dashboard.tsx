@@ -456,6 +456,21 @@ function RequestCard({
     },
   });
 
+  const editForm = useForm({
+    defaultValues: {
+      customerName: request.customerName ?? "",
+      contactInfo: request.contactInfo ?? "",
+      truckNumber: request.truckNumber ?? "",
+      vehicleInfo: request.vehicleInfo ?? "",
+      vehicleColor: request.vehicleColor ?? "",
+      mileage: request.mileage?.toString() ?? "",
+    },
+  });
+
+  const [showRemove, setShowRemove] = useState(false);
+  const [editCustomerOpen, setEditCustomerOpen] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+
   useEffect(() => {
     form.reset({
       status: request.status,
@@ -482,29 +497,14 @@ function RequestCard({
   const showNew = isNewRequest(request);
   const hasUpdates = Boolean(request.workDone || request.partsUsed);
   const createdAtLabel = formatRequestDate(request.createdAt);
-  const [showRemove, setShowRemove] = useState(false);
   const woNumber = request.id.toString().padStart(2, "0");
   const handleDialogOpenChange = (next: boolean) => {
     onDialogOpenChange(next ? request.id : null);
   };
 
-  const [editCustomerOpen, setEditCustomerOpen] = useState(false);
-  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
-
   const handleManageClick = () => {
     onDialogOpenChange(isDialogOpen ? null : request.id);
   };
-
-  const editForm = useForm({
-    defaultValues: {
-      customerName: request.customerName ?? "",
-      contactInfo: request.contactInfo ?? "",
-      truckNumber: request.truckNumber ?? "",
-      vehicleInfo: request.vehicleInfo ?? "",
-      vehicleColor: request.vehicleColor ?? "",
-      mileage: request.mileage?.toString() ?? "",
-    },
-  });
 
   const handleEditCustomerSubmit = (v: {
     customerName: string;
