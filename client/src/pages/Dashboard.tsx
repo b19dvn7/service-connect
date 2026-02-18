@@ -29,7 +29,8 @@ import {
   Phone,
   Mail,
   Building2,
-  X
+  X,
+  MapPin
 } from "lucide-react";
 
 function getStatusIcon(status: string) {
@@ -628,7 +629,12 @@ function RequestCard({
               </p>
             ) : null}
 
-
+            {request.address?.trim() ? (
+              <p className="text-xs text-muted-foreground/60 flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                {request.address.trim()}
+              </p>
+            ) : null}
 
           </div>
 
