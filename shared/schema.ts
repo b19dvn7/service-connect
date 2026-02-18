@@ -15,6 +15,7 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   id: serial("id").primaryKey(),
   customerName: text("customer_name").notNull(),
   contactInfo: text("contact_info").notNull(),
+  address: text("address"),
   vehicleInfo: text("vehicle_info").notNull(),
   vehicleColor: text("vehicle_color"),
   truckNumber: text("truck_number"),

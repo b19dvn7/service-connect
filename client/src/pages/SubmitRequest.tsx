@@ -112,6 +112,7 @@ export default function SubmitRequest() {
     defaultValues: {
       customerName: "",
       contactInfo: "",
+      address: "",
       vehicleInfo: "",
       vehicleColor: "",
       truckNumber: "",
@@ -277,6 +278,27 @@ export default function SubmitRequest() {
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
+                          Address
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Street, City, State"
+                            {...field}
+                            value={field.value ?? ""}
+                            className="bg-background/30 border-white/5 h-9 text-sm"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
                   <div className="grid md:grid-cols-3 gap-3">
                     <FormField
