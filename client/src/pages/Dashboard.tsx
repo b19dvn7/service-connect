@@ -321,9 +321,29 @@ function ServiceDetails({
   return (
     <div className="space-y-4">
       {customerNote?.trim() ? (
-        <div className="flex items-start gap-2 text-sm text-muted-foreground">
-          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/70" />
-          <span className="text-foreground/85">{customerNote}</span>
+        <div className="space-y-1.5">
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+            <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/70" />
+            <span className="text-foreground/85">{customerNote}</span>
+          </div>
+          <div className="flex items-center gap-3 pl-3.5">
+            <EditableNote
+              value={payload.internalNotes}
+              placeholder="add notes"
+              onSave={onSaveInternalNotes}
+              className="text-[10px] normal-case tracking-normal"
+              placeholderClassName="text-muted-foreground/60 normal-case tracking-normal"
+              valueClassName="text-muted-foreground/60 normal-case tracking-normal"
+              textareaClassName="min-h-[32px] leading-tight"
+            />
+            <button
+              type="button"
+              onClick={onMarkDone}
+              className="text-[10px] normal-case tracking-normal border-0 bg-transparent px-0 py-0 transition-colors text-muted-foreground/60 hover:text-foreground"
+            >
+              done
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -390,14 +410,6 @@ function ServiceDetails({
         })}
       </div>
 
-      <div className="border-t border-white/10 pt-2 space-y-1">
-        <InlineNote
-          value={payload.internalNotes}
-          placeholder="notes"
-          onSave={onSaveInternalNotes}
-          className="text-[11px] min-h-[28px] h-7 py-1"
-        />
-      </div>
     </div>
   );
 }
