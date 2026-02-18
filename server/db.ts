@@ -18,4 +18,7 @@ export async function runMigrations() {
   await pool.query(`
     ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS truck_number TEXT;
   `);
+  await pool.query(`
+    ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS address TEXT;
+  `);
 }
