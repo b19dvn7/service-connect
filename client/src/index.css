@@ -9,7 +9,13 @@
   /* Base - Slate/Metal */
   --background: 220 15% 10%; /* Dark matte slate */
   --foreground: 210 20% 98%; /* White/Silver text */
-  
+
+  /* Card / Popover surfaces (slightly elevated above background) */
+  --card: 220 15% 14%;
+  --card-foreground: 210 20% 98%;
+  --popover: 220 18% 13%;
+  --popover-foreground: 210 20% 98%;
+
   /* Primary - Safety Orange/Red */
   --primary: 15 85% 55%; /* Industrial Orange */
   --primary-foreground: 0 0% 100%;
@@ -43,6 +49,10 @@
 .light {
   --background: 210 20% 98%;
   --foreground: 220 15% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 15% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 15% 10%;
   --secondary: 210 10% 90%;
   --secondary-foreground: 220 15% 10%;
   --muted: 210 10% 92%;
