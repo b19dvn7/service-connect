@@ -36,10 +36,10 @@ export function Navbar() {
             <RefreshCw className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <span className="hidden md:block font-display text-2xl font-bold tracking-tight text-foreground uppercase">
-            Detroit Diesel <span className="text-primary">Connect</span>
+            Diesel <span className="text-primary">Connect</span>
           </span>
-          <span className="md:hidden font-display text-lg font-bold tracking-tight text-foreground uppercase">
-            DD<span className="text-primary">C</span>
+          <span className="md:hidden font-display text-lg font-bold tracking-tight uppercase">
+            <span className="text-foreground">D</span><span className="text-primary">C</span>
           </span>
         </Link>
 
