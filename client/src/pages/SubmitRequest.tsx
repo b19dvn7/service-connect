@@ -219,7 +219,7 @@ export default function SubmitRequest() {
                       name="customerName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Customer Name
                           </FormLabel>
                           <FormControl>
@@ -239,7 +239,7 @@ export default function SubmitRequest() {
                       name="contactInfo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Phone / Email / Company
                           </FormLabel>
                           <FormControl>
@@ -261,7 +261,7 @@ export default function SubmitRequest() {
                       name="vehicleInfo"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Truck Info
                           </FormLabel>
                           <FormControl>
@@ -281,7 +281,7 @@ export default function SubmitRequest() {
                       name="vehicleColor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Color
                           </FormLabel>
                           <FormControl>
@@ -303,7 +303,7 @@ export default function SubmitRequest() {
                       name="truckNumber"
                       render={({ field }) => (
                         <FormItem className="md:col-span-1">
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Truck #
                           </FormLabel>
                           <FormControl>
@@ -323,7 +323,7 @@ export default function SubmitRequest() {
                       name="mileage"
                       render={({ field }) => (
                         <FormItem className="md:col-span-1">
-                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                             Miles
                           </FormLabel>
                           <FormControl>
@@ -346,7 +346,7 @@ export default function SubmitRequest() {
 
                 <div className="space-y-4">
                   <div className="space-y-3">
-                    <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                    <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Select Services
                     </FormLabel>
                     <Collapsible
@@ -359,10 +359,10 @@ export default function SubmitRequest() {
                           type="button"
                           className="w-full flex items-center justify-between rounded-sm border border-white/15 bg-secondary/20 px-3 py-2 text-left"
                         >
-                          <div className="text-[10px] font-bold uppercase tracking-widest text-primary/90">
+                          <div className="text-xs font-bold uppercase tracking-widest text-primary/90">
                             Services
                           </div>
-                          <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground/70">
+                          <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground/70">
                             {Object.values(selected).reduce((sum, items) => sum + items.length, 0) > 0
                               ? `${Object.values(selected).reduce((sum, items) => sum + items.length, 0)} selected`
                               : "Select services"}
@@ -397,10 +397,10 @@ export default function SubmitRequest() {
                                     type="button"
                                     className="w-full flex items-center justify-between py-1 text-left"
                                   >
-                                    <div className="text-[10px] font-bold uppercase tracking-widest text-primary/90">
+                                    <div className="text-xs font-bold uppercase tracking-widest text-primary/90">
                                       {labelMap[groupKey]}
                                     </div>
-                                    <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-muted-foreground/70">
+                                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground/70">
                                       {selectedCount > 0 ? `${selectedCount} selected` : "Select"}
                                       <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
                                     </div>
@@ -432,7 +432,7 @@ export default function SubmitRequest() {
 
                                   {groupKey === "fluids" && selected.fluids.includes("Engine oil") && (
                                     <div className="space-y-1 border-l border-white/10 pl-3">
-                                      <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                                      <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
                                         Engine Oil Details
                                       </div>
                                       <div className="space-y-1">
@@ -495,7 +495,7 @@ export default function SubmitRequest() {
                                   )}
 
                                   <div className="flex items-center gap-2 pt-1">
-                                    <span className="text-[9px] uppercase tracking-widest text-muted-foreground/60">
+                                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60">
                                       Notes
                                     </span>
                                     <Input
@@ -517,7 +517,7 @@ export default function SubmitRequest() {
                   </div>
 
                   <div className="space-y-2">
-                    <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                    <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Main Complaint / Additional Instructions
                     </FormLabel>
                     <Textarea
@@ -530,7 +530,7 @@ export default function SubmitRequest() {
                   </div>
 
                   <div className="space-y-2">
-                    <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                    <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Attach Photos
                     </FormLabel>
                     <FormControl>
