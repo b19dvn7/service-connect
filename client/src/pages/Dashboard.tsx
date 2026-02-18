@@ -653,11 +653,14 @@ function RequestCard({
                 Complaint / Reported Issue
               </div>
               <div className="mt-2 text-sm text-foreground/90 leading-relaxed">
-                {request.description ? (
-                  <span className="italic">“{request.description}”</span>
-                ) : (
-                  <span className="text-muted-foreground">No description provided.</span>
-                )}
+                {(() => {
+                  const note = getCustomerNote(servicePayload, request.description);
+                  return note ? (
+                    <span className="italic">"{note}"</span>
+                  ) : (
+                    <span className="text-muted-foreground">No description provided.</span>
+                  );
+                })()}
               </div>
             </div>
 
