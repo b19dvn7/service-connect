@@ -275,31 +275,44 @@ function ServiceDetails({
   onSaveGroupNotes,
   onToggleGroupDone,
   onSaveInternalNotes,
+  onMarkDone,
 }: {
   request: MaintenanceRequest;
   payload: ServicePayload | null;
   onSaveGroupNotes: (groupKey: string, note: string) => void;
   onToggleGroupDone: (groupKey: string, next: boolean) => void;
   onSaveInternalNotes: (note: string) => void;
+  onMarkDone: () => void;
 }) {
   const groups = payload?.groups ?? {};
   const customerNote = getCustomerNote(payload, request.description);
 
   if (!payload) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-1.5">
         {customerNote?.trim() ? (
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
             <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary/70" />
             <span className="text-foreground/85">{customerNote}</span>
           </div>
         ) : null}
-        <div className="space-y-1">
-          <InlineNote
+        <div className="flex items-center gap-3 pl-3.5">
+          <EditableNote
             value={undefined}
-            placeholder="notes"
+            placeholder="add notes"
             onSave={onSaveInternalNotes}
+            className="text-[10px] normal-case tracking-normal"
+            placeholderClassName="text-muted-foreground/60 normal-case tracking-normal"
+            valueClassName="text-muted-foreground/60 normal-case tracking-normal"
+            textareaClassName="min-h-[32px] leading-tight"
           />
+          <button
+            type="button"
+            onClick={onMarkDone}
+            className="text-[10px] normal-case tracking-normal border-0 bg-transparent px-0 py-0 transition-colors text-muted-foreground/60 hover:text-foreground"
+          >
+            done
+          </button>
         </div>
       </div>
     );
@@ -510,7 +523,7 @@ function RequestCard({
           <div className="space-y-2">
             <div className="flex items-center flex-wrap gap-3">
               {showNew && (
-                <span className="text-[12px] font-semibold text-yellow-300">
+                <span className="text-sm font-semibold text-yellow-300">
                   New
                 </span>
               )}
@@ -527,10 +540,10 @@ function RequestCard({
                 className="flex items-center gap-1 text-left"
                 aria-label="Toggle remove"
               >
-                <span className="text-[11px] font-mono uppercase tracking-wider text-foreground/90">
+                <span className="text-xs font-mono uppercase tracking-wider text-foreground/90">
                   WO#
                 </span>
-                <span className="text-[12px] font-mono text-foreground/90">
+                <span className="text-sm font-mono text-foreground/90">
                   {woNumber}
                 </span>
               </button>
@@ -539,12 +552,12 @@ function RequestCard({
                   type="button"
                   onClick={() => onDelete(request.id)}
                   disabled={isDeleting}
-                  className="text-[10px] text-destructive/70 hover:text-destructive transition-colors"
+                  className="text-xs text-destructive/70 hover:text-destructive transition-colors"
                 >
                   remove
                 </button>
               )}
-              <span className="text-[10px] text-muted-foreground/60">
+              <span className="text-xs text-muted-foreground/60">
                 {createdAtLabel}
               </span>
             </div>
@@ -555,7 +568,7 @@ function RequestCard({
               >
                 <SelectTrigger
                   hideChevron
-                  className="h-auto w-auto px-0 py-0 text-[10px] uppercase tracking-widest border-transparent bg-transparent shadow-none focus:ring-0 focus:ring-offset-0"
+                  className="h-auto w-auto px-0 py-0 text-xs uppercase tracking-widest border-transparent bg-transparent shadow-none focus:ring-0 focus:ring-offset-0"
                 >
                   <SelectValue placeholder="Status">
                     <span className="flex items-center gap-1">
@@ -592,12 +605,12 @@ function RequestCard({
                 showIcon={false}
                 triggerVariant="ghost"
                 triggerSize="sm"
-                triggerClassName="h-7 px-2 text-[10px] uppercase tracking-widest text-foreground/90 hover:text-foreground"
+                triggerClassName="h-7 px-2 text-xs uppercase tracking-widest text-foreground/90 hover:text-foreground"
               />
             </div>
 
             {vehicleLine ? (
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground/70 flex items-center gap-2">
                 <Truck className="w-4 h-4 opacity-70" />
                 {vehicleLine.toUpperCase()}
               </p>
@@ -734,6 +747,7 @@ function RequestCard({
                 onSaveGroupNotes={handleSaveGroupNotes}
                 onToggleGroupDone={handleToggleGroupDone}
                 onSaveInternalNotes={handleSaveInternalNotes}
+                onMarkDone={() => onUpdate({ id: request.id, status: "completed" })}
               />
             </div>
 
