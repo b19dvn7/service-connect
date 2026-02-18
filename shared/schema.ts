@@ -17,6 +17,7 @@ export const maintenanceRequests = pgTable("maintenance_requests", {
   contactInfo: text("contact_info").notNull(),
   vehicleInfo: text("vehicle_info").notNull(),
   vehicleColor: text("vehicle_color"),
+  truckNumber: text("truck_number"),
   mileage: integer("mileage"),
   description: text("description").notNull(),
   status: text("status").notNull().default("pending"),

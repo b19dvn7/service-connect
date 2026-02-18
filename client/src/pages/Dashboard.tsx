@@ -317,6 +317,10 @@ function ServiceDetails({
           const items = group.items ?? [];
           const isDone = Boolean(group.completed);
           const engineOil = label === "Fluids" ? group.engineOil : undefined;
+          const hasEngineOil = Boolean(engineOil?.weights?.length);
+
+          // Only show groups where items were actually selected
+          if (items.length === 0 && !hasEngineOil) return null;
 
           return (
             <div key={label} className="space-y-1.5">
@@ -340,10 +344,10 @@ function ServiceDetails({
                     ))}
                   </ul>
                 ) : null}
-                {engineOil?.weights?.length ? (
+                {hasEngineOil ? (
                   <div className="text-[11px] text-muted-foreground/80">
-                    Engine oil: {engineOil.weights.join(", ")}
-                    {engineOil.types?.length ? ` • ${engineOil.types.join(", ")}` : ""}
+                    Engine oil: {engineOil!.weights!.join(", ")}
+                    {engineOil!.types?.length ? ` • ${engineOil!.types.join(", ")}` : ""}
                   </div>
                 ) : null}
               </div>
@@ -354,17 +358,15 @@ function ServiceDetails({
                   onSave={(note) => onSaveGroupNotes(label, note)}
                   className="text-[10px] normal-case tracking-normal"
                   placeholderClassName="text-muted-foreground/60 normal-case tracking-normal"
-                  valueClassName="text-foreground/70 normal-case tracking-normal"
+                  valueClassName="text-muted-foreground/60 normal-case tracking-normal"
                   textareaClassName="min-h-[32px] leading-tight"
                 />
                 <button
                   type="button"
                   onClick={() => onToggleGroupDone(label, !isDone)}
-                  className={`text-[10px] normal-case tracking-normal border-0 bg-transparent px-0 py-0 transition-colors ${
-                    isDone ? "text-foreground/70" : "text-muted-foreground/60 hover:text-foreground"
-                  }`}
+                  className="text-[10px] normal-case tracking-normal border-0 bg-transparent px-0 py-0 transition-colors text-muted-foreground/60 hover:text-foreground"
                 >
-                  done
+                  {isDone ? <span className="line-through">done</span> : "done"}
                 </button>
               </div>
             </div>
