@@ -28,19 +28,28 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-visible">
-      <div className="container mx-auto px-4 min-h-16 py-2 grid grid-cols-[auto_1fr_auto] items-center gap-4 overflow-visible">
-        <Link href="/" className="flex items-center gap-3 group">
+      <div className="container mx-auto px-4 min-h-16 py-2 flex items-center gap-4 overflow-visible">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <div className="text-primary animate-spin-slow">
-            <RefreshCw className="h-6 w-6" />
+            <RefreshCw className="h-5 w-5 md:h-6 md:w-6" />
           </div>
-          <span className="font-display text-2xl font-bold tracking-tight text-foreground uppercase">
+          <span className="hidden md:block font-display text-2xl font-bold tracking-tight text-foreground uppercase">
             Detroit Diesel <span className="text-primary">Connect</span>
+          </span>
+          <span className="md:hidden font-display text-lg font-bold tracking-tight text-foreground uppercase">
+            DD<span className="text-primary">C</span>
           </span>
         </Link>
 
-        <div className="flex items-center justify-center leading-none overflow-visible min-w-0">
+        {/* Clock — desktop only */}
+        <div className="hidden md:flex flex-1 items-center justify-center leading-none overflow-visible min-w-0">
           <SpriteClock />
         </div>
+
+        {/* Spacer on mobile */}
+        <div className="flex-1 md:hidden" />
 
         <div className="flex items-center justify-end gap-4">
           {/* Desktop Nav */}
@@ -87,7 +96,7 @@ export function Navbar() {
                 <div className="flex flex-col gap-6 mt-10">
                   {links.map((link) => (
                     <Link key={link.href} href={link.href}>
-                      <div 
+                      <div
                         className={cn(
                           "text-xl font-display font-bold uppercase tracking-wider cursor-pointer",
                           location === link.href ? "text-primary" : "text-muted-foreground"
@@ -99,7 +108,7 @@ export function Navbar() {
                     </Link>
                   ))}
                   <Link href={adminLink.href}>
-                    <div 
+                    <div
                       className={cn(
                         "text-sm font-display font-bold uppercase tracking-wider cursor-pointer opacity-50",
                         location === adminLink.href ? "text-primary" : "text-muted-foreground"
