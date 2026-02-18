@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Download, Save } from "lucide-react";
+import { FileText, Download, Save, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { MaintenanceRequest, Invoice } from "@shared/schema";
 import { api, buildUrl } from "@shared/routes";
 
@@ -51,6 +52,58 @@ function getRequestNotes(request: MaintenanceRequest): string {
   } catch {
     return "";
   }
+}
+
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="space-y-0">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-xs sm:text-sm font-bold uppercase tracking-wider text-foreground/70 hover:text-foreground transition-colors"
+      >
+        <ChevronDown
+          className={cn("h-3.5 w-3.5 transition-transform", open ? "rotate-180" : "")}
+        />
+        {title}
+      </button>
+      {open && (
+        <div className="overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AutoResizeTextarea({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    ref.current.style.height = "auto";
+    ref.current.style.height = `${ref.current.scrollHeight}px`;
+  }, [value]);
+
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={1}
+      className="w-full bg-secondary/30 text-sm rounded-md border border-input px-3 py-2 resize-none overflow-hidden min-h-[36px] focus:outline-none focus:ring-1 focus:ring-ring"
+    />
+  );
 }
 
 export function InvoiceDialog({
@@ -554,9 +607,9 @@ export function InvoiceDialog({
           <div className="py-8 text-center text-muted-foreground">Loading invoice...</div>
         ) : (
           <div className="space-y-4 sm:space-y-6 pt-4">
-            {/* Work Order Reference */}
-            <div className="bg-secondary/30 p-3 sm:p-4 rounded-lg border border-white/10">
-              <div className="text-xs font-bold uppercase tracking-wider text-primary mb-2">
+            {/* Work Order Reference + Ticket Notes */}
+            <div className="bg-secondary/30 p-3 sm:p-4 rounded-lg border border-white/10 space-y-3">
+              <div className="text-xs font-bold uppercase tracking-wider text-primary">
                 Work Order #{request.id}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
@@ -567,6 +620,23 @@ export function InvoiceDialog({
                   <span className="text-muted-foreground">Vehicle:</span> {request.vehicleInfo}
                 </div>
               </div>
+              {/* Ticket notes pulled from admin work order */}
+              {(request.workDone || getRequestNotes(request)) ? (
+                <div className="border-t border-white/10 pt-3 space-y-2">
+                  {request.workDone ? (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Work Performed</div>
+                      <div className="text-xs text-foreground/85 whitespace-pre-wrap">{request.workDone}</div>
+                    </div>
+                  ) : null}
+                  {getRequestNotes(request) && !request.workDone ? (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Notes</div>
+                      <div className="text-xs text-foreground/85 whitespace-pre-wrap">{getRequestNotes(request)}</div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             {/* Labor Section */}
@@ -617,59 +687,43 @@ export function InvoiceDialog({
               </div>
             </div>
 
-            {/* Parts Section */}
-            <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider">Parts & Materials</h3>
-              <div className="grid gap-3">
-                <div>
-                  <Label className="text-xs">Description</Label>
-                  <Textarea
-                    value={formData.partsDetails}
-                    onChange={(e) => setFormData({ ...formData, partsDetails: e.target.value })}
-                    placeholder="Parts used..."
-                    className="bg-secondary/30 text-sm min-h-[80px]"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Total Cost</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.partsTotal}
-                    onChange={(e) => setFormData({ ...formData, partsTotal: e.target.value })}
-                    placeholder="0.00"
-                    className="bg-secondary/30 text-sm"
-                  />
-                </div>
+            {/* Parts Section — collapsible */}
+            <CollapsibleSection title="Parts & Materials">
+              <div className="grid gap-3 pt-2">
+                <AutoResizeTextarea
+                  value={formData.partsDetails}
+                  onChange={(v) => setFormData({ ...formData, partsDetails: v })}
+                  placeholder="Parts used..."
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.partsTotal}
+                  onChange={(e) => setFormData({ ...formData, partsTotal: e.target.value })}
+                  placeholder="Total cost ($)"
+                  className="bg-secondary/30 text-sm"
+                />
               </div>
-            </div>
+            </CollapsibleSection>
 
-            {/* Misc Charges */}
-            <div className="space-y-3">
-              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider">Additional Charges</h3>
-              <div className="grid gap-3">
-                <div>
-                  <Label className="text-xs">Description</Label>
-                  <Input
-                    value={formData.miscDescription}
-                    onChange={(e) => setFormData({ ...formData, miscDescription: e.target.value })}
-                    placeholder="Fees, shop supplies, etc..."
-                    className="bg-secondary/30 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Amount</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.miscTotal}
-                    onChange={(e) => setFormData({ ...formData, miscTotal: e.target.value })}
-                    placeholder="0.00"
-                    className="bg-secondary/30 text-sm"
-                  />
-                </div>
+            {/* Misc Charges — collapsible */}
+            <CollapsibleSection title="Additional Charges">
+              <div className="grid gap-3 pt-2">
+                <AutoResizeTextarea
+                  value={formData.miscDescription}
+                  onChange={(v) => setFormData({ ...formData, miscDescription: v })}
+                  placeholder="Fees, shop supplies, etc..."
+                />
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={formData.miscTotal}
+                  onChange={(e) => setFormData({ ...formData, miscTotal: e.target.value })}
+                  placeholder="Amount ($)"
+                  className="bg-secondary/30 text-sm"
+                />
               </div>
-            </div>
+            </CollapsibleSection>
 
             {/* Totals */}
             <div className="bg-primary/5 p-3 sm:p-4 rounded-lg border border-primary/20">

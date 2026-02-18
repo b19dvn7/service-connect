@@ -83,6 +83,8 @@ export default function SubmitRequest() {
   const [servicesOpen, setServicesOpen] = useState(false);
   const complaintRef = useRef<HTMLTextAreaElement | null>(null);
 
+  const [truckNumber, setTruckNumber] = useState("");
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -90,6 +92,7 @@ export default function SubmitRequest() {
       contactInfo: "",
       vehicleInfo: "",
       vehicleColor: "",
+      truckNumber: "",
       mileage: undefined,
       description: "",
       isUrgent: false,
@@ -160,6 +163,7 @@ export default function SubmitRequest() {
           setSelected({ filters: [], fluids: [], gaskets: [], components: [] });
           setGroupNotes({ filters: "", fluids: "", gaskets: "", components: "" });
           setIssueText("");
+          setTruckNumber("");
           setAttachments([]);
           setEngineOilWeights([]);
           setEngineOilTypes([]);
@@ -195,8 +199,8 @@ export default function SubmitRequest() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 text-center"
           >
-            <h1 className="font-display text-xl md:text-2xl font-bold uppercase mb-1">New Service Request</h1>
-            <p className="text-muted-foreground text-[12px] font-light">Select services or describe the issue below.</p>
+            <h1 className="font-display text-2xl md:text-3xl font-bold uppercase mb-1">New Service Request</h1>
+            <p className="text-muted-foreground text-sm font-light">Select services or describe the issue below.</p>
           </motion.div>
 
           <motion.div
@@ -215,14 +219,14 @@ export default function SubmitRequest() {
                       name="customerName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[8px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                             Customer Name
                           </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Name..."
                               {...field}
-                              className="bg-background/30 border-white/5 h-8 text-sm"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
                             />
                           </FormControl>
                           <FormMessage />
@@ -235,14 +239,14 @@ export default function SubmitRequest() {
                       name="contactInfo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[8px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                             Phone / Email / Company
                           </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Phone, email, or company name"
                               {...field}
-                              className="bg-background/30 border-white/5 h-8 text-sm"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
                             />
                           </FormControl>
                           <FormMessage />
@@ -257,14 +261,14 @@ export default function SubmitRequest() {
                       name="vehicleInfo"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel className="uppercase text-[8px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                             Truck Info
                           </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Year/Make/Model"
                               {...field}
-                              className="bg-background/30 border-white/5 h-8 text-sm"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
                             />
                           </FormControl>
                           <FormMessage />
@@ -277,14 +281,14 @@ export default function SubmitRequest() {
                       name="vehicleColor"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="uppercase text-[8px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                             Color
                           </FormLabel>
                           <FormControl>
                             <Input
                               placeholder="e.g. White"
                               {...field}
-                              className="bg-background/30 border-white/5 h-8 text-sm"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
                             />
                           </FormControl>
                           <FormMessage />
@@ -296,17 +300,37 @@ export default function SubmitRequest() {
                   <div className="grid md:grid-cols-3 gap-3">
                     <FormField
                       control={form.control}
+                      name="truckNumber"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-1">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
+                            Truck #
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Unit / fleet #"
+                              {...field}
+                              className="bg-background/30 border-white/5 h-9 text-sm"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="mileage"
                       render={({ field }) => (
                         <FormItem className="md:col-span-1">
-                          <FormLabel className="uppercase text-[8px] font-bold tracking-widest text-foreground/70">
+                          <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-foreground/70">
                             Miles
                           </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               placeholder="e.g. 452000"
-                              className="bg-background/30 border-white/5 h-8 text-sm"
+                              className="bg-background/30 border-white/5 h-9 text-sm"
                               value={field.value ?? ""}
                               onChange={(e) =>
                                 field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
@@ -498,7 +522,7 @@ export default function SubmitRequest() {
                     </FormLabel>
                     <Textarea
                       ref={complaintRef}
-                      placeholder="Anything else the tech should know..."
+                      placeholder="What's the issue? Anything the tech should know?"
                       className="min-h-[90px] bg-background/40 border-white/10 resize-none text-sm focus:border-primary/50 transition-colors overflow-hidden"
                       value={issueText}
                       onChange={(e) => resizeComplaint(e.target.value)}
