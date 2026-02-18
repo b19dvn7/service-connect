@@ -607,7 +607,8 @@ function RequestCard({
                   {displayName || request.customerName}
                 </CardTitle>
                 {contactMeta ? (
-                  <span className="pointer-events-none absolute left-0 bottom-full mb-0.5 text-[11px] text-foreground/80 opacity-0 transition-opacity group-hover:opacity-100">
+                  <span className="pointer-events-none absolute left-0 top-full mt-1.5 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-md border border-white/10 bg-card px-2.5 py-1.5 text-xs text-foreground shadow-lg opacity-0 translate-y-[-4px] transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+                    <contactMeta.Icon className="w-3.5 h-3.5 text-primary shrink-0" />
                     {contactMeta.label}
                   </span>
                 ) : null}
