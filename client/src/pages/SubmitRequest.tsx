@@ -4,12 +4,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertMaintenanceRequestSchema } from "@shared/schema";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
   FormMessage,
   FormDescription
 } from "@/components/ui/form";
@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { Loader2, AlertTriangle, Send, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
@@ -25,65 +24,124 @@ import { useLocation } from "wouter";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-const SERVICE_GROUPS = {
-  filters: ["Oil filter", "Fuel filter(s)", "Air filter", "DEF filter"],
-  fluids: ["Engine oil", "Transmission fluid", "Differential fluid(s)", "Coolant"],
-  gaskets: [
-    "Oil pan gasket",
-    "Valve cover gasket",
-    "Oil pump tube seals",
-    "Turbo gasket / o-ring",
-    "Exhaust gasket / seal",
-    "Front crank seal + cover",
-    "Rear crank seal",
-    "Oil pump",
-  ],
-  components: [
-    "Radiator",
-    "CAC (charge air cooler)",
-    "Turbo",
-    "EGR cooler",
-    "Fuel pump",
-    "Air compressor",
-    "Transmission clutch",
-    "Alternator",
-    "Water pump",
-    "Valve adjustment",
-  ],
-} as const;
+// ─── Service catalogue ────────────────────────────────────────────────────────
+
+const CATEGORY_CONFIG = [
+  {
+    key: "Air",
+    label: "Air",
+    items: [
+      "Air dryer",
+      "CAC (charge air cooler)",
+      "Air compressor",
+      "Air filter",
+      "Cabin air filter",
+      "Air lines",
+      "Air tank",
+      "Air bag (suspension)",
+    ],
+    reminders: {} as Record<string, string>,
+  },
+  {
+    key: "Engine",
+    label: "Engine",
+    items: [
+      "Valve adjustment",
+      "Rocker arms",
+      "Rocker shaft",
+      "Camshaft",
+      "Camshaft housing",
+    ],
+    reminders: {
+      "Camshaft housing":
+        "Camshaft housing gaskets are single-use and cannot be reused — make sure to source a new gasket before your appointment.",
+    } as Record<string, string>,
+  },
+  {
+    key: "Fluids",
+    label: "Fluids",
+    items: [
+      "Engine oil",
+      "Transmission fluid",
+      "Differential fluid(s)",
+      "Coolant",
+      "DEF fluid",
+    ],
+    reminders: {} as Record<string, string>,
+  },
+  {
+    key: "Filters",
+    label: "Filters",
+    items: ["Oil filter", "Fuel filter(s)", "DEF filter"],
+    reminders: {} as Record<string, string>,
+  },
+  {
+    key: "Gaskets / Seals",
+    label: "Gaskets / Seals",
+    items: [
+      "Camshaft housing gasket",
+      "Oil pan gasket",
+      "Valve cover gasket",
+      "Oil pump tube seals",
+      "Turbo gasket / o-ring",
+      "Exhaust gasket / seal",
+      "Front crank seal + cover",
+      "Rear crank seal",
+      "Oil pump",
+    ],
+    reminders: {} as Record<string, string>,
+  },
+  {
+    key: "Major Components",
+    label: "Major Components",
+    items: [
+      "Radiator",
+      "Turbo",
+      "EGR cooler",
+      "Fuel pump",
+      "Alternator",
+      "Water pump",
+      "Transmission clutch",
+    ],
+    reminders: {} as Record<string, string>,
+  },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  items: readonly string[];
+  reminders: Record<string, string>;
+}>;
+
+type CategoryKey = (typeof CATEGORY_CONFIG)[number]["key"];
 
 const ENGINE_OIL_WEIGHTS = ["5W-40", "15W-40"] as const;
 const ENGINE_OIL_TYPES = ["Blend", "Synthetic"] as const;
 
-// Extend schema for client-side form if needed, or use directly
+// ─── Form schema ──────────────────────────────────────────────────────────────
+
 const formSchema = insertMaintenanceRequestSchema;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SubmitRequest() {
   const [, setLocation] = useLocation();
   const { mutate, isPending } = useCreateRequest();
   const { toast } = useToast();
 
-  const [selected, setSelected] = useState({
-    filters: [] as string[],
-    fluids: [] as string[],
-    gaskets: [] as string[],
-    components: [] as string[],
-  });
-  const [groupNotes, setGroupNotes] = useState({
-    filters: "",
-    fluids: "",
-    gaskets: "",
-    components: "",
-  });
+  const emptySelected = () =>
+    Object.fromEntries(CATEGORY_CONFIG.map((c) => [c.key, [] as string[]])) as Record<CategoryKey, string[]>;
+  const emptyNotes = () =>
+    Object.fromEntries(CATEGORY_CONFIG.map((c) => [c.key, ""])) as Record<CategoryKey, string>;
+
+  const [openCategories, setOpenCategories] = useState<Set<CategoryKey>>(new Set());
+  const [selected, setSelected] = useState<Record<CategoryKey, string[]>>(emptySelected());
+  const [groupNotes, setGroupNotes] = useState<Record<CategoryKey, string>>(emptyNotes());
   const [issueText, setIssueText] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [engineOilWeights, setEngineOilWeights] = useState<string[]>([]);
   const [engineOilTypes, setEngineOilTypes] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
   const complaintRef = useRef<HTMLTextAreaElement | null>(null);
-
-  const [truckNumber, setTruckNumber] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -99,31 +157,46 @@ export default function SubmitRequest() {
     },
   });
 
-  function toggleService(group: keyof typeof SERVICE_GROUPS, item: string) {
+  function toggleCategory(key: CategoryKey) {
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }
+
+  function toggleService(categoryKey: CategoryKey, item: string) {
     setSelected((prev) => {
-      const current = prev[group];
+      const current = prev[categoryKey];
       const exists = current.includes(item);
-      const nextItems = exists ? current.filter((value) => value !== item) : [...current, item];
-      return { ...prev, [group]: nextItems };
+      return {
+        ...prev,
+        [categoryKey]: exists ? current.filter((v) => v !== item) : [...current, item],
+      };
     });
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const usesEngineOil = selected.fluids.includes("Engine oil");
+    const fluidsSelected = selected["Fluids"] ?? [];
+    const usesEngineOil = fluidsSelected.includes("Engine oil");
 
     const payload = {
-      groups: {
-        Filters: { items: selected.filters, notes: groupNotes.filters },
-        Fluids: {
-          items: selected.fluids,
-          notes: groupNotes.fluids,
-          engineOil: usesEngineOil
-            ? { weights: engineOilWeights, types: engineOilTypes }
-            : undefined,
-        },
-        "Gaskets / Seals": { items: selected.gaskets, notes: groupNotes.gaskets },
-        "Major Components": { items: selected.components, notes: groupNotes.components },
-      },
+      groups: Object.fromEntries(
+        CATEGORY_CONFIG.map((cat) => [
+          cat.key,
+          {
+            items: selected[cat.key] ?? [],
+            notes: groupNotes[cat.key] ?? "",
+            ...(cat.key === "Fluids" && usesEngineOil
+              ? { engineOil: { weights: engineOilWeights, types: engineOilTypes } }
+              : {}),
+          },
+        ])
+      ),
       issueText,
       additionalNotes: issueText,
       attachments: [] as { name: string; url: string }[],
@@ -135,9 +208,7 @@ export default function SubmitRequest() {
         const formData = new FormData();
         attachments.forEach((file) => formData.append("files", file));
         const res = await fetch("/api/uploads", { method: "POST", body: formData });
-        if (!res.ok) {
-          throw new Error("Upload failed");
-        }
+        if (!res.ok) throw new Error("Upload failed");
         const data = await res.json();
         payload.attachments = data.files ?? [];
       } catch (error: any) {
@@ -160,16 +231,16 @@ export default function SubmitRequest() {
       {
         onSuccess: () => {
           form.reset();
-          setSelected({ filters: [], fluids: [], gaskets: [], components: [] });
-          setGroupNotes({ filters: "", fluids: "", gaskets: "", components: "" });
+          setSelected(emptySelected());
+          setGroupNotes(emptyNotes());
+          setOpenCategories(new Set());
           setIssueText("");
-          setTruckNumber("");
           setAttachments([]);
           setEngineOilWeights([]);
           setEngineOilTypes([]);
           setTimeout(() => setLocation("/"), 1200);
         },
-      },
+      }
     );
   }
 
@@ -188,10 +259,12 @@ export default function SubmitRequest() {
     }
   }, [issueText]);
 
+  const totalSelected = Object.values(selected).reduce((sum, items) => sum + items.length, 0);
+
   return (
     <div className="min-h-screen bg-background text-foreground bg-grid-pattern">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
           <motion.div
@@ -212,6 +285,7 @@ export default function SubmitRequest() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
 
+                {/* ── Contact / vehicle info ─────────────────────────── */}
                 <div className="space-y-3 border-b border-white/5 pb-4">
                   <div className="grid md:grid-cols-2 gap-3">
                     <FormField
@@ -344,178 +418,184 @@ export default function SubmitRequest() {
                   </div>
                 </div>
 
+                {/* ── Service selection ──────────────────────────────── */}
                 <div className="space-y-4">
                   <div className="space-y-3">
-                    <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
-                      Select Services
-                    </FormLabel>
-                    <Collapsible
-                      open={servicesOpen}
-                      onOpenChange={setServicesOpen}
-                      className="space-y-2"
-                    >
-                      <CollapsibleTrigger asChild>
-                        <button
-                          type="button"
-                          className="w-full flex items-center justify-between rounded-sm border border-white/15 bg-secondary/20 px-3 py-2 text-left"
-                        >
-                          <div className="text-xs font-bold uppercase tracking-widest text-primary/90">
-                            Services
-                          </div>
-                          <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground/70">
-                            {Object.values(selected).reduce((sum, items) => sum + items.length, 0) > 0
-                              ? `${Object.values(selected).reduce((sum, items) => sum + items.length, 0)} selected`
-                              : "Select services"}
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
+                        Select Services
+                      </FormLabel>
+                      {totalSelected > 0 && (
+                        <span className="text-xs text-primary font-bold tracking-widest uppercase">
+                          {totalSelected} selected
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Category tiles */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {CATEGORY_CONFIG.map((cat) => {
+                        const count = (selected[cat.key] ?? []).length;
+                        const isOpen = openCategories.has(cat.key);
+                        return (
+                          <button
+                            key={cat.key}
+                            type="button"
+                            onClick={() => toggleCategory(cat.key)}
+                            className={cn(
+                              "relative flex flex-col items-center justify-center gap-1 rounded-sm border px-2 py-4 text-center transition-all",
+                              isOpen || count > 0
+                                ? "border-primary/60 bg-primary/10 text-primary"
+                                : "border-white/10 bg-secondary/20 text-foreground/60 hover:border-white/25 hover:text-foreground/80"
+                            )}
+                          >
+                            <span className="text-sm font-bold uppercase tracking-widest leading-tight">
+                              {cat.label}
+                            </span>
+                            {count > 0 && (
+                              <span className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
+                                {count}
+                              </span>
+                            )}
                             <ChevronDown
                               className={cn(
-                                "h-3 w-3 transition-transform",
-                                servicesOpen ? "rotate-180" : ""
+                                "h-3 w-3 mt-0.5 transition-transform opacity-50",
+                                isOpen ? "rotate-180" : ""
                               )}
                             />
-                          </div>
-                        </button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="mt-1">
-                        <div className="space-y-2">
-                          {(Object.keys(SERVICE_GROUPS) as Array<keyof typeof SERVICE_GROUPS>).map((groupKey) => {
-                            const labelMap = {
-                              filters: "Filters",
-                              fluids: "Fluids",
-                              gaskets: "Gaskets / Seals",
-                              components: "Major Components",
-                            };
-                            const selectedCount = selected[groupKey].length;
-                            const hasNotes = Boolean(groupNotes[groupKey]?.trim());
-                            return (
-                              <Collapsible
-                                key={groupKey}
-                                defaultOpen={selectedCount > 0 || hasNotes}
-                                className="border-l border-white/10 pl-3"
-                              >
-                                <CollapsibleTrigger asChild>
-                                  <button
-                                    type="button"
-                                    className="w-full flex items-center justify-between py-1 text-left"
-                                  >
-                                    <div className="text-xs font-bold uppercase tracking-widest text-primary/90">
-                                      {labelMap[groupKey]}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground/70">
-                                      {selectedCount > 0 ? `${selectedCount} selected` : "Select"}
-                                      <ChevronDown className="h-3 w-3 transition-transform data-[state=open]:rotate-180" />
-                                    </div>
-                                  </button>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent className="mt-1 space-y-2">
-                                  <div className="space-y-1">
-                                    {SERVICE_GROUPS[groupKey].map((service) => {
-                                      const active = selected[groupKey].includes(service);
-                                      return (
-                                        <label
-                                          key={service}
-                                          className={cn(
-                                            "flex items-center gap-2 text-xs transition-colors",
-                                            active ? "text-foreground/90" : "text-muted-foreground/80"
-                                          )}
-                                        >
-                                          <input
-                                            type="checkbox"
-                                            checked={active}
-                                            onChange={() => toggleService(groupKey, service)}
-                                            className="h-3 w-3 accent-primary"
-                                          />
-                                          <span>{service}</span>
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                                  {groupKey === "fluids" && selected.fluids.includes("Engine oil") && (
-                                    <div className="space-y-1 border-l border-white/10 pl-3">
-                                      <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">
-                                        Engine Oil Details
-                                      </div>
-                                      <div className="space-y-1">
-                                        {ENGINE_OIL_WEIGHTS.map((weight) => {
-                                          const active = engineOilWeights.includes(weight);
-                                          return (
-                                            <label
-                                              key={weight}
-                                              className={cn(
-                                                "flex items-center gap-2 text-[11px] uppercase tracking-tight",
-                                                active ? "text-foreground/90" : "text-muted-foreground/80"
-                                              )}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={active}
-                                                onChange={() =>
-                                                  setEngineOilWeights((prev) =>
-                                                    prev.includes(weight)
-                                                      ? prev.filter((value) => value !== weight)
-                                                      : [...prev, weight]
-                                                  )
-                                                }
-                                                className="h-3 w-3 accent-primary"
-                                              />
-                                              <span>{weight}</span>
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
-                                      <div className="space-y-1">
-                                        {ENGINE_OIL_TYPES.map((type) => {
-                                          const active = engineOilTypes.includes(type);
-                                          return (
-                                            <label
-                                              key={type}
-                                              className={cn(
-                                                "flex items-center gap-2 text-[11px] uppercase tracking-tight",
-                                                active ? "text-foreground/90" : "text-muted-foreground/80"
-                                              )}
-                                            >
-                                              <input
-                                                type="checkbox"
-                                                checked={active}
-                                                onChange={() =>
-                                                  setEngineOilTypes((prev) =>
-                                                    prev.includes(type)
-                                                      ? prev.filter((value) => value !== type)
-                                                      : [...prev, type]
-                                                  )
-                                                }
-                                                className="h-3 w-3 accent-primary"
-                                              />
-                                              <span>{type}</span>
-                                            </label>
-                                          );
-                                        })}
-                                      </div>
+                    {/* Expanded service panels */}
+                    {CATEGORY_CONFIG.map((cat) => {
+                      if (!openCategories.has(cat.key)) return null;
+                      return (
+                        <div
+                          key={cat.key}
+                          className="rounded-sm border border-white/15 bg-secondary/15 p-4 space-y-3"
+                        >
+                          <div className="text-sm font-bold uppercase tracking-widest text-primary border-b border-white/10 pb-2">
+                            {cat.label}
+                          </div>
+
+                          <div className="space-y-2.5">
+                            {cat.items.map((item) => {
+                              const active = (selected[cat.key] ?? []).includes(item);
+                              const reminder = (cat.reminders as Record<string, string>)[item];
+                              return (
+                                <div key={item}>
+                                  <label
+                                    className={cn(
+                                      "flex items-center gap-3 text-sm cursor-pointer select-none",
+                                      active ? "text-foreground" : "text-foreground/70"
+                                    )}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={active}
+                                      onChange={() => toggleService(cat.key, item)}
+                                      className="h-4 w-4 accent-primary flex-shrink-0"
+                                    />
+                                    <span>{item}</span>
+                                  </label>
+                                  {active && reminder && (
+                                    <div className="ml-7 mt-2 flex items-start gap-2 rounded-sm border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm text-amber-300/90">
+                                      <span className="flex-shrink-0">⚠</span>
+                                      <span>{reminder}</span>
                                     </div>
                                   )}
+                                </div>
+                              );
+                            })}
+                          </div>
 
-                                  <div className="flex items-center gap-2 pt-1">
-                                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground/60">
-                                      Notes
-                                    </span>
-                                    <Input
-                                      placeholder="Add note (optional)"
-                                      className="h-7 bg-background/30 border-white/10 text-xs focus:border-primary/50"
-                                      value={groupNotes[groupKey]}
-                                      onChange={(e) =>
-                                        setGroupNotes((prev) => ({ ...prev, [groupKey]: e.target.value }))
-                                      }
-                                    />
-                                  </div>
-                                </CollapsibleContent>
-                              </Collapsible>
-                            );
-                          })}
+                          {/* Engine oil sub-options */}
+                          {cat.key === "Fluids" && (selected["Fluids"] ?? []).includes("Engine oil") && (
+                            <div className="space-y-2 border-l-2 border-primary/30 pl-3 pt-1">
+                              <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground/70">
+                                Engine Oil Details
+                              </div>
+                              <div className="space-y-1.5">
+                                {ENGINE_OIL_WEIGHTS.map((weight) => {
+                                  const active = engineOilWeights.includes(weight);
+                                  return (
+                                    <label
+                                      key={weight}
+                                      className={cn(
+                                        "flex items-center gap-2 text-sm cursor-pointer select-none",
+                                        active ? "text-foreground/90" : "text-muted-foreground/80"
+                                      )}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={active}
+                                        onChange={() =>
+                                          setEngineOilWeights((prev) =>
+                                            prev.includes(weight)
+                                              ? prev.filter((v) => v !== weight)
+                                              : [...prev, weight]
+                                          )
+                                        }
+                                        className="h-4 w-4 accent-primary"
+                                      />
+                                      <span>{weight}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <div className="space-y-1.5">
+                                {ENGINE_OIL_TYPES.map((type) => {
+                                  const active = engineOilTypes.includes(type);
+                                  return (
+                                    <label
+                                      key={type}
+                                      className={cn(
+                                        "flex items-center gap-2 text-sm cursor-pointer select-none",
+                                        active ? "text-foreground/90" : "text-muted-foreground/80"
+                                      )}
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={active}
+                                        onChange={() =>
+                                          setEngineOilTypes((prev) =>
+                                            prev.includes(type)
+                                              ? prev.filter((v) => v !== type)
+                                              : [...prev, type]
+                                          )
+                                        }
+                                        className="h-4 w-4 accent-primary"
+                                      />
+                                      <span>{type}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Per-category notes */}
+                          <div className="flex items-center gap-2 border-t border-white/10 pt-2">
+                            <span className="text-xs uppercase tracking-widest text-muted-foreground/60 flex-shrink-0">
+                              Notes
+                            </span>
+                            <Input
+                              placeholder="Add note (optional)"
+                              className="h-8 bg-background/30 border-white/10 text-sm focus:border-primary/50"
+                              value={groupNotes[cat.key] ?? ""}
+                              onChange={(e) =>
+                                setGroupNotes((prev) => ({ ...prev, [cat.key]: e.target.value }))
+                              }
+                            />
+                          </div>
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+                      );
+                    })}
                   </div>
 
+                  {/* ── Main complaint ─────────────────────────────── */}
                   <div className="space-y-2">
                     <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Main Complaint / Additional Instructions
@@ -529,6 +609,7 @@ export default function SubmitRequest() {
                     />
                   </div>
 
+                  {/* ── Attachments ────────────────────────────────── */}
                   <div className="space-y-2">
                     <FormLabel className="uppercase text-xs font-bold tracking-widest text-foreground/70">
                       Attach Photos
@@ -549,6 +630,7 @@ export default function SubmitRequest() {
                   </div>
                 </div>
 
+                {/* ── Urgent toggle ──────────────────────────────────── */}
                 <FormField
                   control={form.control}
                   name="isUrgent"
@@ -558,7 +640,7 @@ export default function SubmitRequest() {
                         <FormLabel className="text-sm font-bold uppercase text-red-500/80 flex items-center gap-2">
                           <AlertTriangle className="w-4 h-4" /> Urgent Request
                         </FormLabel>
-                        <FormDescription className="text-[10px]">
+                        <FormDescription className="text-xs">
                           Vehicle is currently broken down or roadside.
                         </FormDescription>
                       </div>
