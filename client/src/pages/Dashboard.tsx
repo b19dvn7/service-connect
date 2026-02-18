@@ -46,7 +46,7 @@ function getStatusIcon(status: string) {
 }
 
 const SERVICE_PREFIX = "SERVICE_JSON:";
-const SERVICE_GROUP_ORDER = ["Filters", "Fluids", "Gaskets / Seals", "Major Components"] as const;
+const SERVICE_GROUP_ORDER = ["Air", "Engine", "Filters", "Fluids", "Gaskets / Seals", "Major Components"] as const;
 const NEW_REQUEST_WINDOW_HOURS = 24;
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
