@@ -95,8 +95,11 @@ function serializeServicePayload(payload: ServicePayload): string {
 function formatVehicleLine(request: MaintenanceRequest): string {
   const base = request.vehicleInfo?.trim() || "";
   const color = request.vehicleColor?.trim();
-  if (color) return `${base} • ${color}`;
-  return base;
+  const truckNum = request.truckNumber?.trim();
+  let line = base;
+  if (color) line += ` • ${color}`;
+  if (truckNum) line += ` • #${truckNum}`;
+  return line;
 }
 
 function formatDisplayName(name?: string | null) {
