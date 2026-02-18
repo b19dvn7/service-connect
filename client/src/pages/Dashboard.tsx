@@ -21,6 +21,13 @@ import { getLoginPath } from "@/lib/auth-utils";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   ClipboardList,
   Truck,
   Clock,
@@ -30,7 +37,10 @@ import {
   Mail,
   Building2,
   X,
-  MapPin
+  MapPin,
+  Pencil,
+  FileText,
+  Settings2,
 } from "lucide-react";
 
 function getStatusIcon(status: string) {
@@ -78,6 +88,12 @@ type UpdatePayload = {
   workDone?: string;
   partsUsed?: string;
   description?: string;
+  customerName?: string;
+  contactInfo?: string;
+  truckNumber?: string;
+  vehicleInfo?: string;
+  vehicleColor?: string;
+  mileage?: number;
 };
 
 function parseServicePayload(description?: string | null): ServicePayload | null {
@@ -448,6 +464,17 @@ function RequestCard({
     });
   }, [form, request.partsUsed, request.status, request.workDone]);
 
+  useEffect(() => {
+    editForm.reset({
+      customerName: request.customerName ?? "",
+      contactInfo: request.contactInfo ?? "",
+      truckNumber: request.truckNumber ?? "",
+      vehicleInfo: request.vehicleInfo ?? "",
+      vehicleColor: request.vehicleColor ?? "",
+      mileage: request.mileage?.toString() ?? "",
+    });
+  }, [editForm, request.customerName, request.contactInfo, request.truckNumber, request.vehicleInfo, request.vehicleColor, request.mileage]);
+
   const servicePayload = parseServicePayload(request.description);
   const vehicleLine = formatVehicleLine(request);
   const displayName = formatDisplayName(request.customerName);
@@ -461,8 +488,42 @@ function RequestCard({
     onDialogOpenChange(next ? request.id : null);
   };
 
-  const handleNameClick = () => {
+  const [editCustomerOpen, setEditCustomerOpen] = useState(false);
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+
+  const handleManageClick = () => {
     onDialogOpenChange(isDialogOpen ? null : request.id);
+  };
+
+  const editForm = useForm({
+    defaultValues: {
+      customerName: request.customerName ?? "",
+      contactInfo: request.contactInfo ?? "",
+      truckNumber: request.truckNumber ?? "",
+      vehicleInfo: request.vehicleInfo ?? "",
+      vehicleColor: request.vehicleColor ?? "",
+      mileage: request.mileage?.toString() ?? "",
+    },
+  });
+
+  const handleEditCustomerSubmit = (v: {
+    customerName: string;
+    contactInfo: string;
+    truckNumber: string;
+    vehicleInfo: string;
+    vehicleColor: string;
+    mileage: string;
+  }) => {
+    onUpdate({
+      id: request.id,
+      customerName: v.customerName || undefined,
+      contactInfo: v.contactInfo || undefined,
+      truckNumber: v.truckNumber || undefined,
+      vehicleInfo: v.vehicleInfo || undefined,
+      vehicleColor: v.vehicleColor || undefined,
+      mileage: v.mileage ? parseInt(v.mileage, 10) : undefined,
+    });
+    setEditCustomerOpen(false);
   };
 
   const handleSaveGroupNotes = (groupKey: string, note: string) => {
@@ -602,25 +663,143 @@ function RequestCard({
               </Select>
             </div>
             <div className="flex items-center flex-wrap gap-3 w-full">
-              <button type="button" onClick={handleNameClick} className="text-left group relative leading-none">
-                <CardTitle className="text-xl uppercase font-display cursor-pointer">
-                  {displayName || request.customerName}
-                </CardTitle>
-                {contactMeta ? (
-                  <span className="pointer-events-none absolute left-0 top-full mt-1.5 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-md border border-white/10 bg-card px-2.5 py-1.5 text-xs text-foreground shadow-lg opacity-0 translate-y-[-4px] transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
-                    <contactMeta.Icon className="w-3.5 h-3.5 text-primary shrink-0" />
-                    {contactMeta.label}
-                  </span>
-                ) : null}
-              </button>
+              {/* Name button — hover shows contact tooltip, click opens action menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button type="button" className="text-left group relative leading-none">
+                    <CardTitle className="text-xl uppercase font-display cursor-pointer hover:text-primary transition-colors">
+                      {displayName || request.customerName}
+                    </CardTitle>
+                    {contactMeta ? (
+                      <span className="pointer-events-none absolute left-0 top-full mt-1.5 z-20 flex items-center gap-1.5 whitespace-nowrap rounded-md border border-white/10 bg-card px-2.5 py-1.5 text-xs text-foreground shadow-lg opacity-0 translate-y-[-4px] transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+                        <contactMeta.Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                        {contactMeta.label}
+                      </span>
+                    ) : null}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem onClick={() => setEditCustomerOpen(true)}>
+                    <Pencil className="w-3.5 h-3.5 mr-2" />
+                    Edit Customer
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setInvoiceDialogOpen(true)}>
+                    <FileText className="w-3.5 h-3.5 mr-2" />
+                    Invoice
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleManageClick}>
+                    <Settings2 className="w-3.5 h-3.5 mr-2" />
+                    Manage WO
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Invisible InvoiceDialog controlled externally */}
               <InvoiceDialog
                 request={request}
-                triggerLabel="Invoice"
+                open={invoiceDialogOpen}
+                onOpenChange={setInvoiceDialogOpen}
                 showIcon={false}
-                triggerVariant="ghost"
-                triggerSize="sm"
-                triggerClassName="h-7 px-2 text-xs uppercase tracking-widest text-foreground/90 hover:text-foreground"
+                triggerClassName="hidden"
               />
+
+              {/* Edit Customer Dialog */}
+              <Dialog open={editCustomerOpen} onOpenChange={setEditCustomerOpen}>
+                <DialogContent className="sm:max-w-[440px] w-[95vw] bg-background border-white/10">
+                  <DialogHeader>
+                    <DialogTitle className="uppercase font-display text-base">
+                      Edit Customer Info
+                    </DialogTitle>
+                  </DialogHeader>
+                  <Form {...editForm}>
+                    <form onSubmit={editForm.handleSubmit(handleEditCustomerSubmit)} className="space-y-4 pt-1">
+                      <FormField
+                        control={editForm.control}
+                        name="customerName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs uppercase font-bold tracking-wider">Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} className="bg-secondary/30" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={editForm.control}
+                        name="contactInfo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs uppercase font-bold tracking-wider">Phone / Email</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="555-000-0000 or name@example.com" className="bg-secondary/30" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={editForm.control}
+                        name="truckNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs uppercase font-bold tracking-wider">Truck #</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="e.g. T-42" className="bg-secondary/30" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField
+                          control={editForm.control}
+                          name="vehicleInfo"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs uppercase font-bold tracking-wider">Vehicle</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="2020 Ford F-250" className="bg-secondary/30" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={editForm.control}
+                          name="vehicleColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs uppercase font-bold tracking-wider">Color</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="White" className="bg-secondary/30" />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={editForm.control}
+                        name="mileage"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs uppercase font-bold tracking-wider">Mileage</FormLabel>
+                            <FormControl>
+                              <Input {...field} type="number" placeholder="125000" className="bg-secondary/30" />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <div className="flex justify-end gap-2 pt-1">
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setEditCustomerOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" size="sm" disabled={isUpdating} className="font-bold uppercase tracking-wide">
+                          Save
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {vehicleLine ? (

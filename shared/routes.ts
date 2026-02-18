@@ -57,6 +57,12 @@ export const api = {
         workDone: z.string().optional(),
         partsUsed: z.string().optional(),
         description: z.string().optional(),
+        customerName: z.string().optional(),
+        contactInfo: z.string().optional(),
+        truckNumber: z.string().optional(),
+        vehicleInfo: z.string().optional(),
+        vehicleColor: z.string().optional(),
+        mileage: z.number().optional(),
       }),
       responses: {
         200: z.custom<typeof maintenanceRequests.$inferSelect>(),

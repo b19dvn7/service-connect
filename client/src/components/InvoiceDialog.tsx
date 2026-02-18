@@ -19,6 +19,8 @@ interface InvoiceDialogProps {
   triggerVariant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
   triggerSize?: "default" | "sm" | "lg" | "icon";
   showIcon?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const SERVICE_PREFIX = "SERVICE_JSON:";
@@ -113,10 +115,14 @@ export function InvoiceDialog({
   triggerVariant,
   triggerSize,
   showIcon = true,
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
 }: InvoiceDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen ?? internalOpen;
+  const setOpen = externalOnOpenChange ?? setInternalOpen;
 
   // Fetch existing invoice for this request
   const { data: invoice, isLoading } = useQuery<Invoice | null>({
